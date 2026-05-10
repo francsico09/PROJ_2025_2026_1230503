@@ -1,0 +1,94 @@
+services:
+
+  # ---------------------------
+  # DATABASE (PostgreSQL)
+  # ---------------------------
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------
+  # LDAP
+  # ---------------------------
+  ldap-server:
+    image: osixia/openldap:1.5.0
+    container_name: ldap-server
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+      - ./mock_ldap/ldif/init.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/init.ldif
+    command: --copy-service
+
+  # ---------------------------
+  # LDAP Admin UI
+  # ---------------------------
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: ldap-admin
+    restart: unless-stopped
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: ldap-server
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "8080:80"
+    depends_on:
+      - ldap-server
+
+  # ---------------------------
+  # BACKEND (FastAPI)
+  # ---------------------------
+  backend:
+    build:
+      context: ./backend
+    container_name: fastapi_backend
+    restart: always
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      ldap-server:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ---------------------------
+  # FRONTEND
+  # ---------------------------
+  frontend:
+    build:
+      context: ./frontend/proj
+    container_name: react_frontend
+    restart: always
+    env_file: .env
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/proj:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  ldap_data:
+  ldap_config:

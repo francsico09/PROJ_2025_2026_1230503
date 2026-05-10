@@ -1,0 +1,227 @@
+@startuml
+
+' Domain Entities
+class User {
+    + id: uuid4
+    + name: String
+    + email: String
+    + role: Role
+    + active: boolean
+    + researcher_profile: Optional[ResearcherProfile]
+}
+
+class ResearcherProfile {
+    + id: UUID
+    + scholar_id: String
+    + orcid: String
+    + metrics: list[ResearcherMetric]
+}
+
+class ResearcherMetric {
+    + id: uuid4
+    + reseacher_id: uuid4
+    + date: DateTime
+    + h_index: int
+    + i10_index: int
+    + total_citations: int
+    + total_publications: int
+    + source: Source
+}
+
+class Source {
+    + name: SourceName
+    + url: String
+}
+
+class Publication {
+    + id: uuid4
+    + title: String
+    + year: int
+    + citations: int
+    + doi: Optional[String]
+    + raw_authors: String
+    + gecad_authors: [researcher_id]
+}
+
+' Enums
+enum SourceName {
+    + ORCID
+    + SCHOLAR
+    + ...
+}
+
+enum Role {
+    + ADMIN
+    + RESEARCHER
+    + ...
+}
+
+' Repositories
+class Repositories {
+    + session: Session
+    + users: UserRepository
+    + publications: PublicationRepository
+    + metrics: ResearcherMetricsRepository
+
+    - commit(self) -> None
+    - rollback(self) -> None
+    - __enter__(self) -> Repositories
+    - __exit__(self) -> Repositories
+    - publications(self) -> PublicationRepository
+    - users(self) -> UserRepository
+    - researcher_metrics(self) -> ResearcherMetricsRepository
+}
+
+interface GeneralRepository {
+    + repository: Generic[T]
+
+    - get_by_id(self, id) -> Optional[T]
+    - get_all(self) -> list[T]
+    - save(self, entity: T) -> T
+    - delete(self, entity: T) -> None
+}
+
+' Repository interfaces
+interface UserRepository {
+    - get_by_name(self, name: String) -> list[User]
+    - get_by_email(self, email: String) -> User
+    - get_by_role(self, role: Role) -> list[User]
+}
+
+interface PublicationRepository {
+    - get_by_researcher_id(self, researcher_id: uuid4) -> list[Publication]
+    - get_by_source(self, source: Source) -> list[Publication]
+    - get_by_year(self, year: int) -> list[Publication]
+    - get_by_title(self, title: String) -> list[Publication]
+}
+
+interface ResearcherMetricsRepository {
+        - get_by_researcher_id(self, researcher_id: uuid4) -> list[ResearcherMetric]
+        - get_by_date(self, date: DateTime) -> list[ResearcherMetric]
+        - get_by_h_index(self, value: int) -> list[ResearcherMetric]
+        - get_by_i10_index(self, value: int) -> list[ResearcherMetric]
+        - get_by_total_citations(self, value: int) -> list[ResearcherMetric]
+        - get_by_total_publications(self, value: int) -> list[ResearcherMetric]
+}
+
+' Repository implementation
+class PostgresUserRepository {
+    + session: Session
+}
+
+class PostgresPublicationRepository {
+    + session: Session
+}
+
+class PostgresResearcherMetricsRepository {
+    + session: Session
+}
+
+' Services
+class UserService {
+    + repository: UserRepository
+}
+
+class PublicationService {
+    + repository: PublicationRepository
+}
+
+class ResearcherMetricsService {
+    + repository: ResearcherMetricsRepository
+}
+
+' Controllers
+class UserController {
+    + UserService
+}
+
+class ResearcherMetricscontroller {
+    + ResearcherMetricsService
+}
+
+
+'Dtos
+class UserCreateDto {
+    + name: String
+    + email: String
+    + role: Role
+}
+
+class UserResponseDto {
+    + name: String
+    + email: String
+    + role: Role
+    + active: bool
+}
+
+class ResearcherProfileDto {
+    + scholar_id
+    + orcid
+}
+
+' class PublicationRawDto
+
+class MetricsResponseDto {
+    + researcher_id: uuid4
+    + date: DateTime
+    + h_index: int
+    + i10_index: int
+    + total_citation: int
+    + total_publications: int
+    + source_name: String
+}
+
+class MetricsAggregatedDto {
+    + researcher_id: uuid4
+    + date: DateTime
+    + h_index: int
+    + i10_index: int
+    + total_citation: int
+    + total_publications: int
+    + source_name: String
+}
+
+User --> Role
+User --> ResearcherProfile
+
+Publication --> Source
+Publication -.-> User
+
+ResearcherMetric --> Source
+
+Source --> SourceName
+
+GeneralRepository o-- ResearcherMetricsRepository
+GeneralRepository o-- UserRepository
+GeneralRepository o-- PublicationRepository
+
+Repositories -.-> ResearcherMetricsRepository
+Repositories -.-> UserRepository
+Repositories -.-> PublicationRepository
+
+PublicationService -.-> PublicationRepository
+
+UserService -.-> UserRepository
+UserService --> UserCreateDto
+UserService --> ResearcherProfileDto
+
+ResearcherMetricsService -.-> ResearcherMetricsRepository
+ResearcherMetricsService --> MetricsAggregatedDto
+
+PostgresPublicationRepository -.-o PublicationRepository
+PostgresPublicationRepository --> Publication
+
+PostgresUserRepository -.-o UserRepository
+PostgresUserRepository --> User
+
+PostgresResearcherMetricsRepository -.-o ResearcherMetricsRepository
+PostgresResearcherMetricsRepository -- ResearcherMetric
+
+UserController -.-> UserService
+UserController --> UserCreateDto
+UserController --> UserResponseDto
+
+ResearcherMetricscontroller -.-> ResearcherMetricsService
+ResearcherMetricscontroller --> MetricsResponseDto
+
+@enduml

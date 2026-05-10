@@ -1,0 +1,135 @@
+@startuml
+
+' General class Visual
+skinparam class {
+  BackgroundColor White
+  BorderColor Black
+  ArrowColor Black
+  FontName Consolas
+}
+
+' Aggregate Roots
+skinparam class {
+  BackgroundColor<<Aggregate Root>> #B3C7F7
+  BorderColor<<Aggregate Root>> #2C4FB3
+}
+
+' Entities
+skinparam class {
+  BackgroundColor<<Entity>> #C9F7C0
+  BorderColor<<Entity>> #388E3C
+}
+
+' Value Objects
+skinparam class {
+  BackgroundColor<<Value Object>> #FFF4B1
+  BorderColor<<Value Object>> #C7A300
+}
+
+' Enums
+skinparam class {
+  BackgroundColor<<Enum>> #E3C8FF
+  BorderColor<<Enum>> #6A1B9A
+}
+
+hide circle
+hide methods
+
+rectangle "Aggregate: ResearcherMetric" {
+    class ResearcherMetric <<Aggregate Root>>
+
+    class Id <<Value Object>>
+    class ResearcherId <<Value Object>>
+    class LastUpdated <<Value Object>>
+    class HIndex <<Value Object>>
+    class I10Index <<Value Object>>
+    class TotalCitations <<Value Object>>
+    class TotalPublications <<Value Object>>
+
+    class Source <<Value Object>>
+    class Name <<Enum>> {
+        ORCID
+        SCHOLAR
+    }
+    class Url <<Value Object>>
+
+    Source *-- Name
+    Source *-- Url
+
+    ResearcherMetric *-- Id
+    ResearcherMetric *-- ResearcherId
+    ResearcherMetric *-- LastUpdated
+    ResearcherMetric *-- HIndex
+    ResearcherMetric *-- I10Index
+    ResearcherMetric *-- TotalCitations
+    ResearcherMetric *-- TotalPublications
+    ResearcherMetric *-- Source
+}
+
+rectangle "Aggregate: User" {
+    class User <<Aggregate Root>>
+
+    class Id <<Value Object>>
+    class Name <<Value Object>>
+    class Email <<Value Object>>
+    class Active <<Value Object>>
+
+    class ResearcherProfile <<Value Object>>
+    class OrcidId <<Value Object>>
+    class ScholarId <<Value Object>>
+    ' Researcher ID in the platform
+    class ResearcherId <<Value Object>>
+
+    class Role <<Enum>> {
+        ADMIN
+        RESEARCHER
+    }
+
+    User *-- Id
+    User *-- Name
+    User *-- Email
+    User *-- Role
+    User *-- Active
+    User *-- ResearcherProfile
+
+    ResearcherProfile *-- OrcidId
+    ResearcherProfile *-- ScholarId
+    ResearcherProfile *-- ResearcherId
+}
+
+rectangle "Aggregate: Publication" {
+    class Publication <<Aggregate Root>>
+
+    class Id <<Value Object>>
+    class Title <<Value Object>>
+    class Year <<Value Object>>
+    class Citations <<Value Object>>
+    class Doi <<Value Object>>
+    class Source <<Value Object>>
+    class RawAuthors <<Value Object>>
+    class GecadAuthors <<Value Object>>
+
+    class Name <<Enum>> {
+        ORCID
+        SCHOLAR
+    }
+    class Url <<Value Object>>
+
+    Publication *-- Id
+    Publication *-- Title
+    Publication *-- Year
+    Publication *-- Citations
+    Publication *-- Doi
+    Publication *-- Source
+    Publication *-- RawAuthors
+    Publication *-- GecadAuthors
+
+    Source *-- Name
+    Source *-- Url
+
+}
+
+ResearcherMetric --> User : ResearcherId
+
+Publication --> User : ResearcherId
+@enduml

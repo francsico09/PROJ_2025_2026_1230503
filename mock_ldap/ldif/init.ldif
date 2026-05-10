@@ -1,0 +1,68 @@
+# --- BASE STRUCTURE ---
+dn: ou=people,dc=isep,dc=ipp,dc=pt
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=isep,dc=ipp,dc=pt
+objectClass: organizationalUnit
+ou: groups
+
+# --- ADMIN ---
+dn: uid=admin,ou=people,dc=isep,dc=ipp,dc=pt
+objectClass: inetOrgPerson
+uid: admin
+sn: Admin
+cn: System Admin
+mail: admin@isep.ipp.pt
+userPassword: admin
+
+# --- RESEARCHERS ---
+dn: uid=res01,ou=people,dc=isep,dc=ipp,dc=pt
+objectClass: inetOrgPerson
+uid: res01
+sn: Costa
+cn: Ana Costa
+mail: ana@isep.ipp.pt
+userPassword: password123
+
+dn: uid=res02,ou=people,dc=isep,dc=ipp,dc=pt
+objectClass: inetOrgPerson
+uid: res02
+sn: Lima
+cn: Bruno Lima
+mail: bruno@isep.ipp.pt
+userPassword: password123
+
+dn: uid=res03,ou=people,dc=isep,dc=ipp,dc=pt
+objectClass: inetOrgPerson
+uid: res03
+sn: Mendes
+cn: Carla Mendes
+mail: carla@isep.ipp.pt
+userPassword: password123
+
+dn: uid=res04,ou=people,dc=isep,dc=ipp,dc=pt
+objectClass: inetOrgPerson
+uid: res04
+sn: Rocha
+cn: Diogo Rocha
+mail: diogo@isep.ipp.pt
+userPassword: password123
+
+dn: uid=res05,ou=people,dc=isep,dc=ipp,dc=pt
+objectClass: inetOrgPerson
+uid: res05
+sn: Pinto
+cn: Eduardo Pinto
+mail: eduardo@isep.ipp.pt
+userPassword: password123
+
+# --- GROUP ---
+dn: cn=researchers,ou=groups,dc=isep,dc=ipp,dc=pt
+objectClass: groupOfNames
+cn: researchers
+member: uid=res01,ou=people,dc=isep,dc=ipp,dc=pt
+member: uid=res02,ou=people,dc=isep,dc=ipp,dc=pt
+member: uid=res03,ou=people,dc=isep,dc=ipp,dc=pt
+member: uid=res04,ou=people,dc=isep,dc=ipp,dc=pt
+member: uid=res05,ou=people,dc=isep,dc=ipp,dc=pt
