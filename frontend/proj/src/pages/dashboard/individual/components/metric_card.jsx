@@ -1,3 +1,13 @@
+/**
+ * A card component to display a single metric with an optional subtitle.
+ *
+ * @param label
+ * @param value
+ * @param subtitle
+ * @param variant
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function MetricCard({ label, value, subtitle, variant = 'default' }) {
     const isLoading = value === null || value === undefined;
 

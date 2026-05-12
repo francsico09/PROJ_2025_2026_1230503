@@ -1,5 +1,12 @@
 import MetricCard from './metric_card.jsx';
 
+/**
+ * IndexMetrics is a component that the *_index metrics specifically.
+ *
+ * @param metric
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function IndexMetrics({ metric }) {
     if (!metric) {
         return (

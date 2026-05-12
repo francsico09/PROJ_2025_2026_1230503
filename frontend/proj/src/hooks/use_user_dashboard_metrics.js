@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getMetricsByUserId } from '../api/metrics.js';
+import {fetchMetricByUser} from '../api/metrics.js';
 
 /**
- * Hook to fetch and manage metrics for the current user's dashboard
- * Allows filtering by source
+ * A custom hook to manage researcher metrics for a user dashboard
+ *
+ * @param userId
+ * @returns {{allMetrics: *[], filteredMetrics: *[], sortedMetrics: *[], currentMetric: *, loading: boolean, error: unknown, selectedSource: unknown, setSelectedSource: (value: unknown) => void, availableSources: undefined[], refresh: (function(): Promise<void>)|*}}
  */
 export function useUserDashboardMetrics(userId) {
     const [allMetrics, setAllMetrics] = useState([]);
@@ -14,17 +16,25 @@ export function useUserDashboardMetrics(userId) {
     const token = localStorage.getItem('token');
 
     const fetchMetrics = useCallback(async () => {
-        if (!userId) return;
+        if (!userId) {
+            return;
+        }
 
         setLoading(true);
         setError(null);
+        setAllMetrics([]);
+        setSelectedSource(null);
 
         try {
-            const data = await getMetricsByUserId(userId, token);
-            const metricsArray = Array.isArray(data) ? data : [];
+            const data = await fetchMetricByUser(userId, token,
+                {
+                    page: 1,
+                    pageSize: 100
+                });
+            const metricsArray = data.items ?? [];
             setAllMetrics(metricsArray);
 
-            if (metricsArray.length > 0 && !selectedSource) {
+            if (metricsArray.length > 0) {
                 const uniqueSources = [...new Map(
                     metricsArray
                         .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -35,20 +45,17 @@ export function useUserDashboardMetrics(userId) {
                     setSelectedSource(uniqueSources[0].name);
                 }
             }
-
         } catch (err) {
-            setError('Failed to load metrics.');
+            setError('Failed to load researcher metrics.');
             setAllMetrics([]);
-
         } finally {
             setLoading(false);
-
         }
     }, [userId, token]);
 
     useEffect(() => {
         fetchMetrics();
-    }, [fetchMetrics]);
+    }, [userId]);
 
     const availableSources = Array.from(
         new Map(allMetrics.map(m => [m.source.name, m.source])).values()
@@ -62,7 +69,6 @@ export function useUserDashboardMetrics(userId) {
         .sort((a, b) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-    console.log('sorted:', sortedMetrics.map(m => m.date));
 
     const currentMetric = sortedMetrics.length > 0 ? sortedMetrics[0] : null;
 

@@ -1,19 +1,18 @@
-# src/modules/normalization/service/normalization_service.py
 import logging
 from datetime import date
 from uuid import UUID
 
 from src.core.repositories.repositories import Repositories
-from src.modules.metrics.model.source.model import SourceName
 from src.modules.normalization.models.metric.normalized_metric import NormalizedMetric
 from src.modules.normalization.models.profile.normalized_researcher_profile import NormalizedProfile
 from src.modules.normalization.models.result.normalization_result import (
     RawExtractionResult, NormalizationResult, RawScholarMetrics, RawWosMetrics
 )
-from src.modules.metrics.model.source.model import Source
 from src.core.settings.settings import settings
 from src.modules.normalization.models.result.normalization_result import RawWosPublication
-from src.modules.metrics.model.researcher_metric_model import MetricPublication
+
+from src.core.domain.researcher_metric.researcher_metric_model.researcher_metric_model import MetricPublication
+from src.core.domain.researcher_metric.researcher_metric_model.source_model import SourceName, Source
 
 logger = logging.getLogger(__name__)
 

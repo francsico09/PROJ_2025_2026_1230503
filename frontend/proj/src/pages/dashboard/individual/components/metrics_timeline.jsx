@@ -24,49 +24,81 @@ function formatPeriodLabel(key, granularity) {
 }
 
 
-function aggregateMetrics(metrics, granularity) {
-    if (!metrics?.length) return [];
+function aggregateMetrics(metrics, granularity, selectedSource) {
+    if (!metrics?.length)
+        return [];
 
+    // 1. filtrar source
+    const filtered = selectedSource
+        ? metrics.filter(
+            m => m.source?.name === selectedSource
+        )
+        : metrics;
+
+    // 2. latest por dia
     const byDay = {};
-    for (const m of metrics) {
-        if (!m.date) continue;
-        const day = m.date;
-        if (!byDay[day] || m.extraction_run_id > byDay[day].extraction_run_id) {
+
+    for (const m of filtered) {
+        if (!m.date)
+            continue;
+
+        const day = new Date(m.date)
+            .toISOString()
+            .split('T')[0];
+
+        if (
+            !byDay[day] ||
+            new Date(m.date) > new Date(byDay[day].date)
+        ) {
             byDay[day] = m;
         }
     }
 
+    // 3. agrupar por período
     const byPeriod = {};
+
     for (const m of Object.values(byDay)) {
         const key = getPeriodKey(m.date, granularity);
-        if (!byPeriod[key]) byPeriod[key] = [];
+
+        if (!byPeriod[key])
+            byPeriod[key] = [];
+
         byPeriod[key].push(m);
     }
 
+    // 4. latest do período
     return Object.entries(byPeriod)
         .map(([key, records]) => {
             const latest = records.reduce((a, b) =>
-                new Date(a.date) > new Date(b.date) ? a : b
+                new Date(a.date) > new Date(b.date)
+                    ? a
+                    : b
             );
+
             return {
-                period:             key,
-                label:              formatPeriodLabel(key, granularity),
-                h_index:            latest.h_index,
-                i10_index:          latest.i10_index,
-                total_citations:    latest.total_citations,
+                period: key,
+                label: formatPeriodLabel(key, granularity),
+
+                h_index: latest.h_index,
+                i10_index: latest.i10_index,
+                total_citations: latest.total_citations,
                 total_publications: latest.total_publications,
-                h_index_5y:         latest.h_index_5y,
-                citations_5y:       latest.citations_5y,
-                date:               latest.date,
+                h_index_5y: latest.h_index_5y,
+                citations_5y: latest.citations_5y,
+
+                date: latest.date,
             };
         })
-        .sort((a, b) => a.period.localeCompare(b.period));
+        .sort((a, b) =>
+            a.period.localeCompare(b.period)
+        );
 }
 
 const CHART_COLOR = '#2d5986';
 
 function MetricLineChart({ data, dataKey, label, formatter }) {
-    if (data.every(d => d[dataKey] == null)) return null;
+    if (data.every(d => d[dataKey] == null))
+        return null;
 
     const fmt = formatter ?? ((v) => v?.toLocaleString() ?? '—');
 
@@ -124,15 +156,21 @@ const METRICS_CONFIG = [
     { key: 'citations_5y',       label: 'Citations (5 years)',   formatter: (v) => v?.toLocaleString() },
 ];
 
-export default function MetricsTimeline({ allMetrics }) {
+export default function MetricsTimeline({ allMetrics, selectedSource}) {
+    console.log(allMetrics);
     const [granularity, setGranularity] = useState('week');
 
     const aggregated = useMemo(
-        () => aggregateMetrics(allMetrics, granularity),
-        [allMetrics, granularity]
+        () => aggregateMetrics(
+            allMetrics,
+            granularity,
+            selectedSource
+        ),
+        [allMetrics, granularity, selectedSource]
     );
 
-    if (!allMetrics?.length) return null;
+    if (!allMetrics?.length)
+        return null;
 
     const visibleMetrics = METRICS_CONFIG.filter(
         m => aggregated.some(d => d[m.key] != null)

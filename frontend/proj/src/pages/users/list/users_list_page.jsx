@@ -4,10 +4,19 @@ import {useDeleteConfirm} from "../../../hooks/use_delete_confirm.js";
 import UsersListView from "./users_list_view.jsx";
 
 export default function UsersListPage({ onEdit, onAdd, onViewProfile, onEditMetric, onCreateMetric }) {
-    const { users, loading, error, remove } = useUsers();
+    const {
+        users,
+        loading,
+        error,
+        remove,
+        page,
+        pages,
+        setPage,
+        search,
+        setSearch,
+    } = useUsers({ initialPageSize: 10 });
     const [selectedId, setSelectedId]       = useState(null);
     const [expandedMetricsId, setExpandedMetricsId] = useState(null);
-    const [selectedMetricId, setSelectedMetricId] = useState(null);
 
     const handleRowClick = (user) => {
         setSelectedId(prev => prev === user.id ? null : user.id);
@@ -21,7 +30,6 @@ export default function UsersListPage({ onEdit, onAdd, onViewProfile, onEditMetr
     const handleCancel = (e) => {
         e?.stopPropagation();
         setSelectedId(null);
-        setSelectedMetricId(null);
         setExpandedMetricsId(null);
     };
 
@@ -62,6 +70,11 @@ export default function UsersListPage({ onEdit, onAdd, onViewProfile, onEditMetr
             onExpandMetrics={(userId) => setExpandedMetricsId(prev => prev === userId ? null : userId)}
             onEditMetric={onEditMetric}
             onCreateMetric={onCreateMetric}
+            page={page}
+            pages={pages}
+            onPageChange={setPage}
+            search={search}
+            onSearchChange={setSearch}
         />
     );
 }

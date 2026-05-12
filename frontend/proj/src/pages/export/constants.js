@@ -17,7 +17,7 @@ export const SCOPE_OPTIONS = [
     {
         value: 'history',
         label: 'Full history',
-        description: 'All collected metrics over time',
+        description: 'All collected researcher_metric over time',
     },
     {
         value: 'latest',

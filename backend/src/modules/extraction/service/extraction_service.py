@@ -8,10 +8,11 @@ from src.core.repositories.repositories import Repositories
 from src.modules.extraction.extractor.orcid_extractor import OrcidExtractor
 from src.modules.extraction.extractor.scholar_extractor import ScholarExtractor
 from src.modules.extraction.extractor.wos_extractor import WosExtractor
-from src.modules.normalization.models.result.normalization_result import RawExtractionResult
-from src.modules.extraction.model.extraction_run_model import ExtractionRun, ExtractionTrigger, ExtractionStatus
-from src.modules.metrics.model.source.model import SourceName
 from src.modules.extraction.extractor.scopus_extractor import ScopusExtractor
+from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionRun, \
+    ExtractionTrigger, ExtractionStatus
+from src.core.domain.researcher_metric.researcher_metric_model.source_model import SourceName
+from src.modules.normalization.models.result.normalization_result import RawExtractionResult
 
 logger = logging.getLogger(__name__)
 

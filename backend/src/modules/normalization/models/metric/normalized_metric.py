@@ -3,9 +3,8 @@ import uuid
 from typing import Optional
 from pydantic.dataclasses import dataclass
 
-from src.modules.metrics.model.source.model import SourceName
-from src.modules.metrics.model.source.model import Source
-from src.modules.metrics.model.researcher_metric_model import MetricPublication
+from src.core.domain.researcher_metric.researcher_metric_model.researcher_metric_model import MetricPublication
+from src.core.domain.researcher_metric.researcher_metric_model.source_model import Source
 
 
 @dataclass

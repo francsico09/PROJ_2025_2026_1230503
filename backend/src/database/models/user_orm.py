@@ -5,9 +5,7 @@ from sqlalchemy.dialects.postgresql.base import UUID
 from sqlalchemy.orm import relationship
 
 from src.database.base.base import Base
-
 from src.database.models.researcher_profile_orm import ResearcherProfileORM
-
 
 class UserORM(Base):
     __tablename__ = "users"
@@ -32,8 +30,8 @@ class UserORM(Base):
     )
 
     def to_domain(self):
-        from src.modules.user.model.user_model import User
-        from src.modules.user.model.role.user_role import UserRole
+        from src.core.domain.user.user_model.user_model import User
+        from src.core.domain.user.user_model.user_role import UserRole
 
         return User(
             id=self.id,

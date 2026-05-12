@@ -28,7 +28,7 @@ def make_metric(**kwargs):
 def make_researcher(**kwargs):
     r = MagicMock()
     r.id = kwargs.get("id", uuid.uuid4())
-    r.metrics = kwargs.get("metrics", [])
+    r.metrics = kwargs.get("researcher_metric", [])
     return r
 
 
@@ -52,7 +52,7 @@ def make_repos(
     repos.profiles.get_all = AsyncMock(return_value=all_profiles or [])
     repos.profiles.save = AsyncMock()
 
-    # metrics
+    # researcher_metric
     repos.metrics.get_by_id = AsyncMock(return_value=metric)
     repos.metrics.get_all = AsyncMock(return_value=all_metrics or [])
     repos.metrics.get_by_date = AsyncMock(return_value=all_metrics or [])

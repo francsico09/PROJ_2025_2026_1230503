@@ -113,7 +113,7 @@ class WosExtractor:
 
         # citations
         times_cited = (
-                doc.get("metrics", {}).get("timesCited")
+                doc.get("researcher_metric", {}).get("timesCited")
                 or doc.get("timesCited")
                 or doc.get("times_cited")
                 or 0

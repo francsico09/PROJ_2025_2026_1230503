@@ -14,7 +14,7 @@ export const exportResearcherMetrics = async (researcherId, format, scope, token
         params.append('end_date', dateParams.endDate);
     }
 
-    const url = `${BASE}/metrics/${researcherId}?${params.toString()}`;
+    const url = `${BASE}/researcher_metric/${researcherId}?${params.toString()}`;
 
     const res = await fetch(url, {
         headers: {
@@ -44,7 +44,7 @@ export const exportAllMetrics = async (format, scope, token, dateParams = {}) =>
         params.append('end_date', dateParams.endDate);
     }
 
-    const url = `${BASE}/metrics?${params.toString()}`;
+    const url = `${BASE}/researcher_metric?${params.toString()}`;
 
     const res = await fetch(url, {
         headers: {

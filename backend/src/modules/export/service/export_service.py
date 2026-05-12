@@ -10,7 +10,8 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from starlette import status
 
 from src.core.repositories.repositories import Repositories
-from src.modules.export.schema.export_schemas import ExportFormat, ExportScope
+
+from src.core.domain.export.export_schema.export_schemas import ExportFormat, ExportScope
 
 HEADERS = [
     "Researcher Name",

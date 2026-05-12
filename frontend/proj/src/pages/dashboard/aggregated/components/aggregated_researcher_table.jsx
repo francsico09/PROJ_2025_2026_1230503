@@ -1,4 +1,18 @@
-export default function OrgResearchersTable({ users, latestByResearcher, loading }) {
+import Pagination from '../../../../components/paginations.jsx';
+
+/**
+ * Table showing researchers in an organization with their latest metrics.
+ *
+ * @param users
+ * @param latestByResearcher
+ * @param loading
+ * @param page
+ * @param pages
+ * @param onPageChange
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
+export default function OrgResearchersTable({ users, latestByResearcher, loading, page, pages, onPageChange }) {
     const metricByResearcherId = Object.fromEntries(
         latestByResearcher.map(m => [m.researcher_id, m])
     );
@@ -16,7 +30,7 @@ export default function OrgResearchersTable({ users, latestByResearcher, loading
     return (
         <div className="card">
             <div className="card-header">
-                <h3>{users?.length ?? 0} researchers</h3>
+                <h3>{users?.length ?? 0} researchers on this page</h3>
             </div>
             <table>
                 <thead>
@@ -70,6 +84,15 @@ export default function OrgResearchersTable({ users, latestByResearcher, loading
                 })}
                 </tbody>
             </table>
+            {pages > 1 && (
+                <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
+                    <Pagination
+                        page={page}
+                        pages={pages}
+                        onPageChange={onPageChange}
+                    />
+                </div>
+            )}
         </div>
     );
 }

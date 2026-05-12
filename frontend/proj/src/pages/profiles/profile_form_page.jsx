@@ -60,7 +60,7 @@ export default function ProfileFormPage({ user, profile, onBack, onExtraction })
             }
 
         } catch (err) {
-            setError('Error extracting metrics.');
+            setError('Error extracting researcher_metric.');
         } finally {
             setExtractionLoading(false);
         }
@@ -242,7 +242,7 @@ export default function ProfileFormPage({ user, profile, onBack, onExtraction })
                         onClick={handleExtraction}
                         disabled={extractionLoading}
                     >
-                        {extractionLoading ? 'Extracting…' : 'Extract metrics'}
+                        {extractionLoading ? 'Extracting…' : 'Extract researcher_metric'}
                     </button>
                 </div>
             </form>

@@ -9,6 +9,8 @@ from src.database.base.base import Base
 from src.database.models.researcher_metric_orm import ResearcherMetricORM
 
 
+
+
 class ResearcherProfileORM(Base):
     __tablename__ = "researcher_profiles"
 
@@ -29,7 +31,7 @@ class ResearcherProfileORM(Base):
     )
 
     def to_domain(self):
-        from src.modules.researcher_profile.model.reasearcher_profile_model import ResearcherProfile
+        from src.core.domain.researcher_profile.researcher_profile_model.reasearcher_profile_model import ResearcherProfile
 
         return ResearcherProfile(
             id=self.id,

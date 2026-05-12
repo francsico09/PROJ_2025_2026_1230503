@@ -1,3 +1,16 @@
+/**
+ * Login view component.
+ *
+ * @param email
+ * @param password
+ * @param loading
+ * @param error
+ * @param onEmailChange
+ * @param onPasswordChange
+ * @param onSubmit
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function LoginView({
                                       email,
                                       password,

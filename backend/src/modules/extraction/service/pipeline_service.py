@@ -1,11 +1,3 @@
-"""
-PipelineService — orquestra o pipeline completo:
-    1. ExtractionService  → dados brutos
-    2. NormalizationService → dados normalizados + deduplicação
-    3. Persistência via ResearcherMetricService e ResearcherProfileService
-
-É este o serviço chamado pelo controller e pelo job agendado.
-"""
 import logging
 import uuid
 
@@ -18,13 +10,12 @@ from datetime import datetime, timezone
 
 from src.core.repositories.repositories import Repositories
 from src.modules.extraction.service.extraction_service import ExtractionService
-from src.modules.metrics.schema.metric_schemas import ResearcherMetricCreate
-from src.modules.metrics.service.researcher_metric_service import ResearcherMetricService
 from src.modules.normalization.models.result.normalization_result import NormalizationResult
 from src.modules.normalization.service.normalization_service import NormalizationService
-from src.modules.extraction.model.extraction_run_model import ExtractionRun, ExtractionTrigger, ExtractionStatus
-
 from src.modules.extraction.service.extraction_run_service import ExtractionRunService
+from src.core.domain.researcher_metric.researcher_model_schema.researcher_metric_schemas import \
+    ResearcherMetricCreate
+from src.modules.researcher_metric.service.researcher_metric_service import ResearcherMetricService
 
 logger = logging.getLogger(__name__)
 
@@ -116,9 +107,7 @@ class PipelineService:
                                 ]
                             )
 
-                            print('[PIPELINE SERVICE] METRIC DATA TO CREATE: ', metric_data)
-
-                            await self._metric_service.create_metric(metric_data, repos=repos)
+                            await self._metric_service.create_metric(metric_data)
                             await repos.commit()
 
                             pipeline_result.metric_created = True

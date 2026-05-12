@@ -1,16 +1,36 @@
 const BASE = '/api/v1/users';
 
-export const getUsers = (token) =>
-    fetch(`${BASE}/`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+export const fetchUsers = (token,
+                         {
+                             page = 1,
+                             pageSize = 20,
+                             search = '',
+                             sortBy = 'name',
+                             sortDir = 'asc' } = {}
+) => {
+    const params = new URLSearchParams(
+        {
+        page, page_size:
+        pageSize,
+        search,
+        sort_by: sortBy,
+        sort_dir: sortDir
+    });
+
+    return fetch(`/api/v1/users/?${params}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
         }
-        ).then(r => r.json());
+    }
+    ).then(async r => {
+        if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
+        return r.json();
+    });
+};
 
 export const createUser = (data, token) =>
-    fetch(`${BASE}/create_user`, {
+    fetch(`${BASE}/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

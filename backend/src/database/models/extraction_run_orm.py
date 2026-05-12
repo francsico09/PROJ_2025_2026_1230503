@@ -7,7 +7,6 @@ from sqlalchemy.orm import relationship
 
 from src.database.base.base import Base
 
-
 class ExtractionRunORM(Base):
     __tablename__ = "extraction_runs"
 
@@ -30,18 +29,19 @@ class ExtractionRunORM(Base):
     )
 
     def to_domain(self):
-        from src.modules.extraction.model.extraction_run_model import (ExtractionRun, ExtractionTrigger, ExtractionStatus)
-        from src.modules.metrics.model.source.model import SourceName
+        from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionRun, \
+            ExtractionTrigger, ExtractionStatus
+        from src.core.domain.researcher_metric.researcher_metric_model.source_model import SourceName
 
         return ExtractionRun(
-            id=self.id,
-            researcher_id=self.researcher_id,
-            triggered_at=self.triggered_at,
-            triggered_by=ExtractionTrigger(self.triggered_by),
-            status=ExtractionStatus(self.status),
-            sources_attempted=[SourceName(s) for s in self.sources_attempted],
-            sources_succeeded=[SourceName(s) for s in self.sources_succeeded],
-        )
+                    id=self.id,
+                    researcher_id=self.researcher_id,
+                    triggered_at=self.triggered_at,
+                    triggered_by=ExtractionTrigger(self.triggered_by),
+                    status=ExtractionStatus(self.status),
+                    sources_attempted=[SourceName(s) for s in self.sources_attempted],
+                    sources_succeeded=[SourceName(s) for s in self.sources_succeeded],
+                )
 
     @staticmethod
     def from_domain(entity):

@@ -2,13 +2,10 @@ import datetime
 import uuid
 
 from src.core.repositories.repositories import Repositories
-from src.modules.metrics.model.source.model import Source, SourceName
-from src.modules.metrics.schema.metric_schemas import ResearcherMetricResponse, ResearcherMetricCreate, \
-    ResearcherMetricUpdate
-from src.modules.researcher_profile.model.reasearcher_profile_model import ResearcherProfile
-from src.modules.metrics.model.researcher_metric_model import ResearcherMetric
-from src.modules.extraction.model.extraction_run_model import ExtractionRun
-from src.modules.extraction.schema.extraction_run_schemas import ExtractionRunCreate, ExtractionRunResponse
+
+from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionRun
+from src.core.domain.extraction_run.extractiuon_run_schema.extraction_run_schemas import ExtractionRunCreate, \
+    ExtractionRunResponse
 
 
 class ExtractionRunService:
@@ -47,5 +44,6 @@ class ExtractionRunService:
             sources_succeeded=run_data.sources_succeeded,
         )
         await repos.extraction_runs.save(run)
-        # Note: No commit here! Let the Pipeline decide.
+        await repos.commit()
+
         return ExtractionRunResponse.model_validate(run)

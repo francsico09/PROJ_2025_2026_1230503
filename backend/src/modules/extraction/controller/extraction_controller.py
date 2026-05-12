@@ -1,8 +1,3 @@
-"""
-Controller de extracção.
-- POST /extraction/run-all       → admin, corre para todos os utilizadores
-- POST /extraction/run/{user_id} → admin ou o próprio investigador
-"""
 import uuid
 
 from fastapi import APIRouter, Depends, status
@@ -12,9 +7,10 @@ from src.modules.auth.auth import require_admin, get_current_user
 from src.modules.extraction.service.pipeline_service import PipelineService, ExtractionPipelineResult
 from src.modules.extraction.extractor.orcid_extractor import OrcidExtractor
 from src.modules.extraction.extractor.scholar_extractor import ScholarExtractor
-from src.modules.user.model.user_model import User
 from src.modules.extraction.extractor.wos_extractor import WosExtractor
 from src.modules.extraction.extractor.scopus_extractor import ScopusExtractor
+
+from src.core.domain.user.user_model.user_model import User
 
 router = APIRouter(prefix="/extraction", tags=["Extraction"])
 
@@ -23,7 +19,7 @@ def get_pipeline_service() -> PipelineService:
     from src.core.repositories.repositories import Repositories
     from src.modules.extraction.service.extraction_service import ExtractionService
     from src.modules.normalization.service.normalization_service import NormalizationService
-    from src.modules.metrics.service.researcher_metric_service import ResearcherMetricService
+    from src.modules.researcher_metric.service.researcher_metric_service import ResearcherMetricService
     from src.modules.extraction.service.extraction_run_service import ExtractionRunService
 
     repos = Repositories()

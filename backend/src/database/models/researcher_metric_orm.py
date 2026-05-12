@@ -2,7 +2,9 @@ import uuid
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
+
 from src.database.base.base import Base
+from src.core.domain.researcher_metric.researcher_metric_model.researcher_metric_model import ResearcherMetric
 
 
 class ResearcherMetricORM(Base):
@@ -33,8 +35,8 @@ class ResearcherMetricORM(Base):
     profile = relationship("ResearcherProfileORM", back_populates="metrics")
 
     def to_domain(self):
-        from src.modules.metrics.model.researcher_metric_model import ResearcherMetric, MetricPublication
-        from src.modules.metrics.model.source.model import SourceName, Source
+        from src.core.domain.researcher_metric.researcher_metric_model.researcher_metric_model import MetricPublication
+        from src.core.domain.researcher_metric.researcher_metric_model.source_model import Source, SourceName
 
         source_obj = Source(name=SourceName(self.source), url="")
 

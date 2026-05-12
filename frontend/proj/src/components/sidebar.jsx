@@ -9,6 +9,7 @@ const NAV_ITEMS = [
         ]
     },
     {key: 'manage-users', label: 'Manage users', icon: ICONS.users, roles: ['admin']},
+    {key: 'my-user-profile', label: 'My Profile', icon: ICONS.users},
     {key: 'export', label: 'Export Metrics', icon: ICONS.metrics},
 ];
 

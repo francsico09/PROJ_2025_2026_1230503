@@ -1,10 +1,14 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function CitationsBarChart({ metric, allMetrics }) {
-    // Debug logging
-    console.log('CitationsBarChart metric:', metric);
-    console.log('CitationsBarChart cites_per_year:', metric?.cites_per_year);
-
+/**
+ * CitationsBarChart component renders a bar chart of citations per year for a given metric.
+ *
+ * @param metric
+ * @param allMetrics
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
+export default function CitationsBarChart({ metric }) {
     if (!metric || !metric.cites_per_year) {
         return (
             <div className="chart-empty-state">
@@ -15,14 +19,11 @@ export default function CitationsBarChart({ metric, allMetrics }) {
         );
     }
 
-    // Parse cites_per_year if it's a string (JSON)
     let citesPerYear = metric.cites_per_year;
     if (typeof citesPerYear === 'string') {
         try {
             citesPerYear = JSON.parse(citesPerYear);
-            console.log('Parsed cites_per_year from string:', citesPerYear);
         } catch (e) {
-            console.error('Failed to parse cites_per_year:', e);
             return (
                 <div className="chart-empty-state">
                     <div className="chart-empty-text">
@@ -33,9 +34,7 @@ export default function CitationsBarChart({ metric, allMetrics }) {
         }
     }
 
-    // Ensure citesPerYear is an object
     if (typeof citesPerYear !== 'object' || citesPerYear === null) {
-        console.error('cites_per_year is not an object:', citesPerYear);
         return (
             <div className="chart-empty-state">
                 <div className="chart-empty-text">
@@ -45,7 +44,6 @@ export default function CitationsBarChart({ metric, allMetrics }) {
         );
     }
 
-    // Transform cites_per_year object to array format for Recharts
     const chartData = Object.entries(citesPerYear)
         .map(([year, citations]) => ({
             year: parseInt(year),
@@ -53,8 +51,6 @@ export default function CitationsBarChart({ metric, allMetrics }) {
         }))
         .filter(item => !isNaN(item.year)) // Filter out invalid years
         .sort((a, b) => a.year - b.year);
-
-    console.log('Transformed chartData:', chartData);
 
     if (chartData.length === 0) {
         return (

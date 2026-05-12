@@ -1,57 +1,61 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getMetrics } from '../api/metrics.js';
+import {getLatestByUser} from "../api/metrics.js";
+import {getAggAverages} from "../api/aggregated_metrics.js";
 
+/**
+ * A custom hook to manage the state and data fetching for the organization dashboard.
+ *
+ * @returns {{latestByResearcher: *[], averages: unknown, availableSources: *[], selectedSource: unknown, setSelectedSource: (value: unknown) => void, loading: boolean, error: unknown, refresh: function(): Promise<void>}}
+ */
 export function useOrgDashboard() {
-    const [allMetrics, setAllMetrics]   = useState([]);
-    const [loading, setLoading]         = useState(true);
-    const [error, setError]             = useState(null);
-    const [selectedSource, setSelectedSource] = useState(null);
     const token = localStorage.getItem('token');
 
-    const fetchMetrics = useCallback(async () => {
+    const [latestByResearcher, setLatestByResearcher] = useState([]);
+    const [averages, setAverages]                     = useState(null);
+    const [availableSources, setAvailableSources]     = useState([]);
+    const [selectedSource, setSelectedSource]         = useState(null);
+    const [loading, setLoading]                       = useState(true);
+    const [error, setError]                           = useState(null);
+
+    // 1. Carrega fontes disponíveis a partir das métricas mais recentes (sem filtro de fonte)
+    const fetchSources = useCallback(async () => {
+        try {
+            const data = await getLatestByUser(token);
+            const metrics = Array.isArray(data) ? data : [];
+            const sources = [...new Set(metrics.map(m => m.source?.name).filter(Boolean))].sort();
+            setAvailableSources(sources.map(name => ({ name })));
+            if (sources.length > 0) setSelectedSource(prev => prev ?? sources[0]);
+        } catch {
+            setError('Failed to load available sources.');
+        }
+    }, [token]);
+
+    // 2. Quando a fonte muda, busca latest e averages para essa fonte
+    const fetchForSource = useCallback(async (source) => {
+        if (!source) return;
         setLoading(true);
         setError(null);
         try {
-            const data = await getMetrics(token);
-            const metrics = Array.isArray(data) ? data : [];
-            setAllMetrics(metrics);
-
-            if (metrics.length > 0) {
-                const sources = [...new Set(metrics.map(m => m.source?.name).filter(Boolean))].sort();
-                if (sources.length > 0) setSelectedSource(sources[0]);
-            }
+            const [latest, avgs] = await Promise.all([
+                getLatestByUser(token, source),
+                getAggAverages(token, source),
+            ]);
+            setLatestByResearcher(Array.isArray(latest) ? latest : []);
+            setAverages(avgs);
         } catch {
             setError('Failed to load organisation metrics.');
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [token]);
 
-    useEffect(() => { fetchMetrics(); }, [fetchMetrics]);
+    useEffect(() => { fetchSources(); }, [fetchSources]);
 
-    const availableSources = [...new Set(
-        allMetrics.map(m => m.source?.name).filter(Boolean)
-    )].sort().map(name => ({ name }));
-
-    const filteredMetrics = selectedSource
-        ? allMetrics.filter(m => m.source?.name === selectedSource)
-        : allMetrics;
-
-    const latestByResearcher = Object.values(
-        filteredMetrics.reduce((acc, m) => {
-            const rid = m.researcher_id;
-            if (!acc[rid] || new Date(m.date) > new Date(acc[rid].date)) {
-                acc[rid] = m;
-            }
-            return acc;
-        }, {})
-    );
-
-    const averages = _calcAverages(latestByResearcher);
+    useEffect(() => {
+        if (selectedSource) fetchForSource(selectedSource);
+    }, [selectedSource, fetchForSource]);
 
     return {
-        allMetrics,
-        filteredMetrics,
         latestByResearcher,
         averages,
         availableSources,
@@ -59,23 +63,6 @@ export function useOrgDashboard() {
         setSelectedSource,
         loading,
         error,
-        refresh: fetchMetrics,
-    };
-}
-
-function _calcAverages(metrics) {
-    if (metrics.length === 0) return null;
-
-    const sum = (key) => metrics.reduce((acc, m) => acc + (m[key] ?? 0), 0);
-    const avg = (key) => Math.round(sum(key) / metrics.length);
-
-    return {
-        h_index:            avg('h_index'),
-        i10_index:          avg('i10_index'),
-        total_citations:    avg('total_citations'),
-        total_publications: avg('total_publications'),
-        h_index_5y:         avg('h_index_5y'),
-        citations_5y:       avg('citations_5y'),
-        count:              metrics.length,
+        refresh: () => fetchForSource(selectedSource),
     };
 }

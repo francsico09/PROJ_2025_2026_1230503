@@ -1,12 +1,15 @@
 import uuid
 import datetime
 
-from src.modules.user.model.user_model import User
-from src.modules.user.model.role.user_role import UserRole
-from src.modules.researcher_profile.model.reasearcher_profile_model import ResearcherProfile
-from src.modules.metrics.model.researcher_metric_model import ResearcherMetric
-from src.modules.metrics.model.source.model import SourceName, Source
-from src.modules.extraction.model.extraction_run_model import ExtractionRun, ExtractionTrigger, ExtractionStatus
+from src.core.domain.pagination.schema.pagination_schema import PaginationParams
+from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionRun, \
+    ExtractionTrigger, ExtractionStatus
+from src.core.domain.researcher_metric.researcher_metric_model.researcher_metric_model import ResearcherMetric
+from src.core.domain.researcher_metric.researcher_metric_model.source_model import SourceName, Source
+from src.core.domain.researcher_profile.researcher_profile_model.reasearcher_profile_model import \
+    ResearcherProfile
+from src.core.domain.user.user_model.user_model import User
+from src.core.domain.user.user_model.user_role import UserRole
 from src.core.repositories.repositories import Repositories
 
 
@@ -40,7 +43,9 @@ async def bootstrap():
     async with Repositories() as repo:
 
         users = await repo.users.get_all()
-        if any(u.role == UserRole.admin for u in users):
+
+        if any(u.role == UserRole.admin.value for u in users):
+            print("Skipping bootstrap. Admin already in database")
             return
 
         print("Initializing Bootstrap...")

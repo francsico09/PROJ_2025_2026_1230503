@@ -3,32 +3,34 @@ import uuid
 from fastapi import HTTPException
 
 from src.core.repositories.repositories import Repositories
-from src.modules.researcher_profile.schema.researcher_profile_schemas import ResearcherProfileResponse, \
-    ResearcherProfileCreate, ResearcherProfileUpdate
-from src.modules.user.model.user_model import User
-from src.modules.researcher_profile.model.reasearcher_profile_model import ResearcherProfile
 
 from starlette import status
+
+from src.core.domain.pagination.schema.pagination_schema import PaginationParams, PaginatedResponse
+from src.core.domain.researcher_profile.researcher_profile_model.reasearcher_profile_model import \
+    ResearcherProfile
+from src.core.domain.researcher_profile.researcher_profile_schema.researcher_profile_schemas import \
+    ResearcherProfileCreate, ResearcherProfileResponse, ResearcherProfileUpdate
+from src.core.domain.user.user_model.user_model import User
 
 
 class ResearcherProfileService:
     def __init__(self, repos: Repositories) -> None:
         self._repos = repos
 
-    """
-    Asynchronous function to create a ResearcherProfile. If successful, the newly added 
-    ResearcherProfile will be returned, else an exception will be raised.
-    
-    :param profile ResearcherProfile profile: the profile that will be created.
-    
-    :return ResearcherProfileResponse:
-    
-    :raises:
-    """
     async def create_profile(
             self,
             profile_data: ResearcherProfileCreate
     ) -> ResearcherProfileResponse:
+        """
+        Asynchronous function to create a ResearcherProfile. If successful, the newly added
+        ResearcherProfile will be returned, else an exception will be raised.
+
+        :param profile_data: data to create the profile
+
+        :return ResearcherProfileResponse:
+        """
+
         async with self._repos as repos:
             existing_scholar = await repos.profiles.get_by_scholar_id(profile_data.scholar_id)
 
@@ -56,17 +58,18 @@ class ResearcherProfileService:
 
             return ResearcherProfileResponse.model_validate(profile)
 
-    """
-    Asynchronous function to delete a ResearcherProfile. Nothing is returned.
-    
-    :param profile_id UUID: id of the profile that will be deleted.
-    
-    :raises:
-    """
+
     async def delete_profile(
             self,
             profile_id: uuid.UUID
     ) -> None:
+        """
+        Asynchronous function to delete a ResearcherProfile. Nothing is returned.
+
+        :param profile_id: id of the profile that will be deleted.
+
+        :raises:
+        """
         async with self._repos as repos:
             profile = await repos.profiles.get_user_by_id(profile_id)
 
@@ -76,22 +79,23 @@ class ResearcherProfileService:
             await repos.users.delete(profile_id)
             await repos.commit()
 
-    """
-    Asynchronous function to update a ResearcherProfile. If successful, the updated profile
-    is returned, else an exception will be raised.
-    
-    :param profile_id UUID: id of the profile that will be updated.
-    
-    :return ResearcherProfileResponse:
-    
-    :raises:
-    """
+
     async def update_profile(
             self,
             profile_id: uuid.UUID,
             profile_data: ResearcherProfileUpdate,
             current_user: User
     ) -> ResearcherProfileResponse:
+        """
+        Asynchronous function to update a ResearcherProfile. If successful, the updated profile
+        is returned, else an exception will be raised.
+
+        :param profile_id: id of the profile that will be updated.
+        :param profile_data: data for the update.
+        :param current_user:
+
+        :return ResearcherProfileResponse:
+        """
         async with self._repos as repos:
             profile = await repos.profiles.get_by_id(profile_id)
 
@@ -100,9 +104,10 @@ class ResearcherProfileService:
 
             if current_user.role == 'researcher':
                 if profile_data.metrics:
-                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only admins can update metrics on researcher profiles")
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only admins can update metrics")
 
                 profile.update(profile_data)
+
             else:
                 profile.update(profile_data)
 
@@ -111,58 +116,23 @@ class ResearcherProfileService:
 
             return ResearcherProfileResponse.model_validate(profile)
 
-    """
-    Asynchronous function to fetch a ResearcherProfile by the scholar id. If successful, the updated profile
-    is returned, else an exception will be raised.
-
-    :param scholar_id str: scholar id of the profile that will be fetched.
-
-    :return ResearcherProfileResponse:
-
-    :raises:
-    """
-    async def get_profile_by_scholar_id(
+    async def fetch_profiles(
             self,
-            scholar: str
-    ) -> ResearcherProfileResponse:
+            params: PaginationParams
+    ) -> PaginatedResponse[ResearcherProfileResponse]:
+        """
+        Asynchronous function to fetch all ResearcherProfiles. If there are no ResearcherProfiles,
+        the list is returned empty.
+
+        :return list[ResearcherProfileResponse]:
+        """
         async with self._repos as repos:
-            profile = await repos.profiles.get_by_scholar(scholar)
+            result = await repos.profiles.fetch(params)
 
-            if not profile:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
-
-            return ResearcherProfileResponse.model_validate(profile)
-
-    """
-    Asynchronous function to fetch a ResearcherProfile by the orcid. If successful, the updated profile
-    is returned, else an exception will be raised.
-
-    :param orcid str: orcid of the profile that will be fetched.
-
-    :return ResearcherProfileResponse:
-
-    :raises:
-    """
-    async def get_profile_by_orcid(
-            self,
-            orcid: str
-    ) -> ResearcherProfileResponse:
-        async with self._repos as repos:
-            profile = await repos.profiles.get_by_orcid(orcid)
-
-            if not profile:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
-
-            return ResearcherProfileResponse.model_validate(profile)
-
-    """
-    Asynchronous function to fetch all ResearcherProfiles. If there are no ResearcherProfiles, 
-    the list is returned empty.
-    
-    :return list[ResearcherProfileResponse]:
-    """
-    async def list_profiles(
-            self
-    ) -> list[ResearcherProfileResponse]:
-        async with self._repos as repos:
-            return await repos.profiles.get_all()
+            return PaginatedResponse(
+                items=[ResearcherProfileResponse.model_validate(p) for p in result.items],
+                total=result.total,
+                page=result.page,
+                page_size=result.page_size,
+                pages=result.pages,
+            )

@@ -1,5 +1,12 @@
 import { useState } from 'react';
 
+/**
+ * A custom hook to manage delete confirmation state and actions.
+ *
+ * @param removeFn
+ * @param onSuccess
+ * @returns {{deleteTarget: unknown, deleting: boolean, handleDeleteClick: handleDeleteClick, handleDeleteConfirm: (function(): Promise<void>)|*, handleDeleteCancel: function(): void}}
+ */
 export function useDeleteConfirm(removeFn, onSuccess) {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting]         = useState(false);

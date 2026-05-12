@@ -70,7 +70,7 @@ class ScopusExtractor:
     def _extract_from_search(self, scopus_id: str) -> Optional[RawScopusMetrics]:
         """
         Uses Search API.
-        Extracts available metrics from search response.
+        Extracts available researcher_metric from search response.
         """
 
         logger.info(f"[Scopus] Extracting from search API for ID '{scopus_id}'")

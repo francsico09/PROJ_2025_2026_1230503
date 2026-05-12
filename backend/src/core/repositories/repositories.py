@@ -1,10 +1,12 @@
 from src.core.session import AsyncSessionFactory
-from src.modules.metrics.adapters.postgres_researcher_metric import PostgresResearcherMetricRepository
-from src.modules.researcher_profile.adapters.postgres_researcher_profile import PostgresResearcherProfileRepository
-from src.modules.user.adapters.postgres_user import PostgresUserRepository
-from src.modules.extraction.adapters.postgres_extraction_run import PostgresExtractionRunRepository
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.modules.extraction.adapters.postgres_extraction_run import PostgresExtractionRunRepository
+from src.modules.researcher_metric.adapters.postgres_researcher_metric import PostgresResearcherMetricRepository
+from src.modules.researcher_profile.adapters.postgres_researcher_profile import \
+    PostgresResearcherProfileRepository
+from src.modules.user.adapters.postgres_user import PostgresUserRepository
 
 """
     This is the application of the Unit of Work design pattern on
@@ -28,24 +30,23 @@ class Repositories:
         self.profiles = PostgresResearcherProfileRepository(self._session)
         self.metrics = PostgresResearcherMetricRepository(self._session)
         self.extraction_runs = PostgresExtractionRunRepository(self._session)
+
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type:
             await self._session.rollback()
+
         else:
             await self._session.commit()
+
         await self._session.close()
 
-    """
-    Asynchronous function to commit the changes made to the repositories.
-    """
+
     async def commit(self) -> None:
         await self._session.commit()
 
-    """
-    Asynchronous function to roll back the changes made to the repositories.
-    """
+
     async def rollback(self) -> None:
         await self._session.rollback()
 

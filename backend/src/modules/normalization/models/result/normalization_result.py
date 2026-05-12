@@ -3,8 +3,7 @@ from typing import Optional
 from pydantic.dataclasses import dataclass
 from src.modules.normalization.models.metric.normalized_metric import NormalizedMetric
 from src.modules.normalization.models.profile.normalized_researcher_profile import NormalizedProfile
-
-from src.modules.extraction.model.extraction_run_model import ExtractionRun
+from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionRun
 
 
 @dataclass

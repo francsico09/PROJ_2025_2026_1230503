@@ -135,8 +135,15 @@ export default function App() {
                         onBack={handleBack}
                     />
                 ) : null;
+
             case 'export':
                 return <ExportPage currentUser={currentUser} />;
+
+            case 'my-user-profile':
+                return <UserEditPage
+                    item={currentUser}
+                    onBack={handleBack}
+                />;
 
             default:
                 return <DashboardPage />;

@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { login } from '../../api/auth.js';
 import LoginView from './login_view.jsx';
 
+/**
+ * LoginPage component manages the login process, including form state,
+ * API interaction, and error handling.
+ *
+ * @param onLogin
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function LoginPage({ onLogin }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

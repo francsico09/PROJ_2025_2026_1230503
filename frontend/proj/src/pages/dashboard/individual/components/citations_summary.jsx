@@ -1,5 +1,12 @@
 import MetricCard from './metric_card.jsx';
 
+/**
+ * CitationsSummary is a component that displays a summary of citation metrics for a researcher.
+ *
+ * @param metric
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function CitationsSummary({ metric }) {
     if (!metric) {
         return (

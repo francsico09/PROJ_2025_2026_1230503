@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useUsers } from '../../../../hooks/use_users.js';
 
+/**
+ * UserSelector component allows selecting a researcher from a dropdown list.
+ *
+ * @param selectedUserId
+ * @param onUserSelect
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function UserSelector({ selectedUserId, onUserSelect }) {
     const { users, loading } = useUsers();
     const [searchTerm, setSearchTerm] = useState('');

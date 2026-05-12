@@ -1,15 +1,3 @@
-"""
-Dependências de autenticação para injectar nos controllers via Depends().
-
-Uso:
-    @router.get("/something")
-    async def endpoint(current_user: User = Depends(get_current_user)):
-        ...
-
-    @router.post("/admin-only")
-    async def admin_endpoint(_: User = Depends(require_admin)):
-        ...
-"""
 import logging
 import uuid
 
@@ -20,7 +8,7 @@ from starlette import status
 
 from src.core.repositories.repositories import Repositories
 from src.core.settings.settings import settings
-from src.modules.user.model.user_model import User
+from src.core.domain.user.user_model.user_model import User
 
 logger = logging.getLogger(__name__)
 

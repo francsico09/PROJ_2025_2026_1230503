@@ -3,6 +3,13 @@ import { useUsers } from '../../hooks/use_users.js';
 import { exportResearcherMetrics, exportAllMetrics } from '../../api/export.js';
 import ExportView from './export_view.jsx';
 
+/**
+ * ExportPage component allows users to export their metrics in various formats and scopes.
+ *
+ * @param currentUser
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function ExportPage({ currentUser }) {
     const isAdmin = currentUser?.role === 'admin';
 

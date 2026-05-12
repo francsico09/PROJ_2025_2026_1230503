@@ -9,11 +9,12 @@ from seed import bootstrap
 from src.core.session import engine
 from src.database.base.base import Base
 from src.modules.auth.controller.auth_controller import router as auth_router
-from src.modules.metrics.controller.researcher_metric_controller import router as metrics_router
+from src.modules.researcher_metric.controller.researcher_metric_controller import router as metrics_router
 from src.modules.user.controller.user_controller import router as users_router
 from src.modules.extraction.controller.extraction_controller import router as extraction_router
 from src.modules.researcher_profile.controller.researcher_profile_controller import router as profile_controller
 from src.modules.export.controller.export_controller import router as export_controller
+from src.modules.researcher_metric.controller.aggregated_researcher_metrics_controller import router as agg_metrics_controller
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -51,3 +52,4 @@ app.include_router(metrics_router,    prefix="/api/v1")
 app.include_router(extraction_router, prefix="/api/v1")
 app.include_router(profile_controller, prefix="/api/v1")
 app.include_router(export_controller, prefix="/api/v1")
+app.include_router(agg_metrics_controller, prefix="/api/v1")

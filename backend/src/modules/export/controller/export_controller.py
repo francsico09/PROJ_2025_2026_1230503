@@ -6,10 +6,11 @@ from fastapi.responses import Response
 
 from src.core.repositories.repositories import Repositories
 from src.modules.auth.auth import get_current_user
-from src.modules.export.schema.export_schemas import ExportFormat, ExportScope
 from src.modules.export.service.export_service import ExportService
-from src.modules.user.model.user_model import User
-from src.modules.user.model.role.user_role import UserRole
+
+from src.core.domain.export.export_schema.export_schemas import ExportFormat, ExportScope
+from src.core.domain.user.user_model.user_model import User
+from src.core.domain.user.user_model.user_role import UserRole
 
 router = APIRouter(prefix="/export", tags=["Export"])
 
@@ -24,8 +25,8 @@ def get_export_service() -> ExportService:
 
 
 @router.get(
-    "/metrics/{researcher_id}",
-    summary="Export researcher metrics.",
+    "/researcher_metric/{researcher_id}",
+    summary="Export researcher researcher_metric.",
 )
 async def export_metrics(
         researcher_id: uuid.UUID,
@@ -41,7 +42,7 @@ async def export_metrics(
         from starlette import status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only export your own metrics.",
+            detail="You can only export your own researcher_metric.",
         )
 
     data, filename = await service.export(researcher_id, format, scope, start_date, end_date)
@@ -56,8 +57,8 @@ async def export_metrics(
 
 
 @router.get(
-    "/metrics",
-    summary="Export all researcher metrics",
+    "/researcher_metric",
+    summary="Export all researcher researcher_metric",
 )
 async def export_all_metrics(
         format: ExportFormat  = Query(ExportFormat.xlsx),
@@ -73,7 +74,7 @@ async def export_all_metrics(
     if current_user.role != UserRole.admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can export all metrics.",
+            detail="Only admins can export all researcher_metric.",
         )
 
     async with Repositories() as repos:
@@ -82,7 +83,7 @@ async def export_all_metrics(
     all_data = b""
     all_rows = []
 
-    from src.modules.export.schema.export_schemas import ExportFormat as EF
+    from src.core.domain.export.schema.export_schemas import ExportFormat as EF
     from src.modules.export.service.export_service import HEADERS
 
     for user in users:

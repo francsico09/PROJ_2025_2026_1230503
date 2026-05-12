@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getProfiles, getProfileById, updateProfile, createProfile, deleteProfile} from '../api/researcher_profile.js';
 
+/**
+ * A custom hook to manage researcher profiles, including fetching,
+ * creating, updating, and deleting profiles.
+ *
+ * @returns {{profiles: *[], loading: boolean, error: unknown, create: function(*): Promise<unknown>, update: function(*, *): Promise<unknown>, remove: (function(*): Promise<void>)|*, refresh: (function(): Promise<void>)|*}}
+ */
 export function useProfiles() {
     const [profiles, setProfiles]     = useState([]);
     const [loading, setLoading] = useState(true);

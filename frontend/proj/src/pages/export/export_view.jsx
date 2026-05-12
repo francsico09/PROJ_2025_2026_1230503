@@ -3,6 +3,35 @@ import { FORMAT_OPTIONS, SCOPE_OPTIONS } from './constants.js';
 import Icon, { ICONS } from '../../components/icon.jsx';
 import Badge from '../../components/badge.jsx';
 
+/**
+ * ExportView component renders the UI for configuring and initiating the export of
+ * researcher metrics.
+ *
+ * @param isAdmin
+ * @param format
+ * @param setFormat
+ * @param scope
+ * @param setScope
+ * @param startDate
+ * @param setStartDate
+ * @param endDate
+ * @param setEndDate
+ * @param searchQuery
+ * @param setSearch
+ * @param selectedUser
+ * @param setSelected
+ * @param exportAll
+ * @param setExportAll
+ * @param loading
+ * @param success
+ * @param error
+ * @param loadingUsers
+ * @param filtered
+ * @param canExport
+ * @param handleExport
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function ExportView({
                                        isAdmin,
                                        format,

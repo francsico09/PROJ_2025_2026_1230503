@@ -5,6 +5,26 @@ import IndexMetrics from './components/index_metrics.jsx';
 import UserSelector from './components/user_selector.jsx';
 import MetricsTimeline from "./components/metrics_timeline.jsx";
 
+/**
+ * IndividualDashboardView component is responsible for rendering the dashboard view
+ * for an individual researcher.
+ * It displays the researcher's metrics, allows source selection, and shows relevant charts
+ * and summaries. Admin users can select any researcher to view their dashboard, while regular
+ * users see their own metrics.
+ *
+ * @param isAdmin
+ * @param selectedUserId
+ * @param setSelectedUserId
+ * @param allMetrics
+ * @param currentMetric
+ * @param loading
+ * @param error
+ * @param selectedSource
+ * @param setSelectedSource
+ * @param availableSources
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function IndividualDashboardView({
                                                     isAdmin,
                                                     selectedUserId,
@@ -23,8 +43,8 @@ export default function IndividualDashboardView({
                 <h2>Dashboard</h2>
                 <p>
                     {isAdmin
-                        ? 'View research metrics for any researcher in the system.'
-                        : 'Your research metrics overview and analytics.'
+                        ? 'View research researcher_metric for any researcher in the system.'
+                        : 'Your research researcher_metric overview and analytics.'
                     }
                 </p>
             </div>
@@ -75,8 +95,8 @@ export default function IndividualDashboardView({
                                 <span>No metrics available yet</span>
                                 <p className="empty-state-text">
                                     {isAdmin
-                                        ? 'This researcher has no metrics available yet.'
-                                        : 'Your metrics will appear here once they have been extracted.'
+                                        ? 'This researcher has no researcher_metric available yet.'
+                                        : 'Your researcher_metric will appear here once they have been extracted.'
                                     }
                                 </p>
                             </div>
@@ -122,7 +142,6 @@ export default function IndividualDashboardView({
                                         <div className="dashboard-chart-container">
                                             <CitationsBarChart
                                                 metric={currentMetric}
-                                                allMetrics={allMetrics}
                                             />
                                         </div>
 
@@ -132,7 +151,10 @@ export default function IndividualDashboardView({
                             )}
 
                             {allMetrics.length > 0 && (
-                                <MetricsTimeline allMetrics={allMetrics} />
+                                <MetricsTimeline
+                                    allMetrics={allMetrics}
+                                    selectedSource={selectedSource}
+                                />
                             )}
                         </>
                     )}

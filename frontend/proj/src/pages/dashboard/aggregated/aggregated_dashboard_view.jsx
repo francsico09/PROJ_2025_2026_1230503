@@ -2,6 +2,24 @@ import SourceSelector from "../individual/components/source_selector.jsx";
 import OrgAveragesCard from "./components/aggregated_average_card.jsx";
 import OrgResearchersTable from "./components/aggregated_researcher_table.jsx";
 
+/**
+ * AggregatedDashboardView is the presentational component for the aggregated dashboard page.
+ *
+ * @param researchers
+ * @param latestByResearcher
+ * @param averages
+ * @param availableSources
+ * @param selectedSource
+ * @param onSourceChange
+ * @param loadingMetrics
+ * @param loadingUsers
+ * @param error
+ * @param page
+ * @param pages
+ * @param onPageChange
+ * @returns {React.JSX.Element}
+ * @constructor
+ */
 export default function AggregatedDashboardView({
                                                     researchers,
                                                     latestByResearcher,
@@ -12,6 +30,9 @@ export default function AggregatedDashboardView({
                                                     loadingMetrics,
                                                     loadingUsers,
                                                     error,
+                                                    page,
+                                                    pages,
+                                                    onPageChange,
                                                 }) {
     return (
         <div>
@@ -75,6 +96,9 @@ export default function AggregatedDashboardView({
                 users={researchers}
                 latestByResearcher={latestByResearcher}
                 loading={loadingMetrics || loadingUsers}
+                page={page}
+                pages={pages}
+                onPageChange={onPageChange}
             />
         </div>
     );

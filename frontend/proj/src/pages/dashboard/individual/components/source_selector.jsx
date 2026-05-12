@@ -1,3 +1,12 @@
+/**
+ * Component for selecting the data source for the dashboard.
+ *
+ * @param availableSources
+ * @param selectedSource
+ * @param onSourceChange
+ * @returns {React.JSX.Element|null}
+ * @constructor
+ */
 export default function SourceSelector({ availableSources, selectedSource, onSourceChange }) {
     if (availableSources.length === 0) {
         return null;

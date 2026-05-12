@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import Badge from '../../../components/badge.jsx';
 import Icon, { ICONS } from '../../../components/icon.jsx';
 import ConfirmDialog from '../../../components/confirm_dialog.jsx';
+import Pagination from '../../../components/paginations.jsx';
 import ResearcherMetricsUserRow from './user_metrics/researcher_metrics_user_row.jsx';
 
 export default function UsersListView({
@@ -23,6 +24,11 @@ export default function UsersListView({
                                           onExpandMetrics,
                                           onEditMetric,
                                           onCreateMetric,
+                                          page,
+                                          pages,
+                                          onPageChange,
+                                          search,
+                                          onSearchChange,
                                       }) {
     return (
         <div>
@@ -33,7 +39,7 @@ export default function UsersListView({
 
             <div className="card">
                 <div className="card-header">
-                    <h3>{loading ? '—' : `${users?.length || 0} users`}</h3>
+                    <h3>{loading ? '—' : `${users?.length || 0} users on this page`}</h3>
                     <button className="btn btn-primary" onClick={onAdd}>
                         <Icon d={ICONS.plus} size={14}/>
                         New user
@@ -45,6 +51,24 @@ export default function UsersListView({
                         {error}
                     </div>
                 )}
+
+                {/* ── Search Bar ── */}
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                    <input
+                        type="text"
+                        placeholder="Search by name or email…"
+                        value={search}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontFamily: 'inherit',
+                        }}
+                    />
+                </div>
 
                 <table>
                     <thead>
@@ -111,7 +135,7 @@ export default function UsersListView({
 
                                             {/* ── Toolbar ── */}
                                             <div className="user-dropdown-toolbar">
-                                                {/* Left — metrics toggle */}
+                                                {/* Left — researcher_metric toggle */}
                                                 <div className="user-dropdown-toolbar-left">
                                                     {user.researcherProfile && (
                                                         <button
@@ -122,7 +146,7 @@ export default function UsersListView({
                                                                 d={expandedMetricsId === user.id ? ICONS.metrics : ICONS.metrics}
                                                                 size={13}
                                                             />
-                                                            {expandedMetricsId === user.id ? 'Hide metrics' : 'View metrics'}
+                                                            {expandedMetricsId === user.id ? 'Hide researcher_metric' : 'View researcher_metric'}
                                                         </button>
                                                     )}
                                                 </div>
@@ -186,6 +210,16 @@ export default function UsersListView({
                     ))}
                     </tbody>
                 </table>
+
+                {pages > 1 && (
+                    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
+                        <Pagination
+                            page={page}
+                            pages={pages}
+                            onPageChange={onPageChange}
+                        />
+                    </div>
+                )}
             </div>
 
             <ConfirmDialog

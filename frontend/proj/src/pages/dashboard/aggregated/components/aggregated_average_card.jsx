@@ -1,14 +1,26 @@
+/**
+ * Component to display average metrics for an organization, such as average
+ * h-index, i10-index, citations, and publications.
+ * It accepts an 'averages' object containing the metrics and an optional
+ * 'source' string to indicate the data source.
+ *
+ * @param averages
+ * @param source
+ * @returns {React.JSX.Element|null}
+ * @constructor
+ */
+
 export default function OrgAveragesCard({ averages, source }) {
-    if (!averages) return null;
+    if (!averages)
+        return null;
 
     const stats = [
-        { label: 'Avg. h-index',            value: averages.h_index,            hint: null },
-        { label: 'Avg. i10-index',           value: averages.i10_index,          hint: null },
-        { label: 'Avg. citations',           value: averages.total_citations?.toLocaleString(), hint: null },
-        { label: 'Avg. publications',        value: averages.total_publications,  hint: null },
-        { label: 'Avg. h-index (5y)',        value: averages.h_index_5y ?? '—',  hint: 'Scholar only' },
-        { label: 'Avg. citations (5y)',      value: averages.citations_5y?.toLocaleString() ?? '—', hint: 'Scholar only' },
-        { label: 'Researchers with metrics', value: averages.count,              hint: null },
+        { label: 'Avg. h-index', value: averages.h_index, hint: null },
+        { label: 'Avg. i10-index', value: averages.i10_index, hint: null },
+        { label: 'Avg. citations', value: averages.total_citations?.toLocaleString(), hint: null },
+        { label: 'Avg. publications', value: averages.total_publications, hint: null },
+        { label: 'Avg. h-index (5y)', value: averages.h_index_5y ?? '—', hint: 'Scholar only' },
+        { label: 'Avg. citations (5y)', value: averages.citations_5y?.toLocaleString() ?? '—', hint: 'Scholar only' },
     ];
 
     return (

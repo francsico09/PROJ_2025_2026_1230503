@@ -1,13 +1,3 @@
-"""
-AuthService — orquestra o login:
-  1. Valida credenciais via LDAP
-  2. Cria ou actualiza o User no sistema (sync)
-  3. Devolve um JWT
-
-Desta forma o sistema tem sempre um registo local do utilizador
-(necessário para associar métricas, perfis, etc.) mas a autenticação
-é sempre delegada ao LDAP — nunca guardamos passwords.
-"""
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -18,10 +8,11 @@ from starlette import status
 
 from src.core.repositories.repositories import Repositories
 from src.core.settings.settings import settings
-from src.modules.auth.schemas.auth_schemas import LoginRequest, TokenResponse
 from src.modules.ldap.service.ldap_service import LDAPService, LDAPUser
-from src.modules.user.model.role.user_role import UserRole
-from src.modules.user.model.user_model import User
+from src.core.domain.auth.auth_schema.auth_schemas import LoginRequest, TokenResponse
+
+from src.core.domain.user.user_model.user_model import User
+from src.core.domain.user.user_model.user_role import UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +25,16 @@ class AuthService:
 
     async def login(self, credentials: LoginRequest) -> TokenResponse:
         """
-        Autentica um utilizador via LDAP e devolve um JWT.
+        Authenticates a user via LDAP and returns a JWT token if successful.
+        If the user doesn't exist in the local database, it creates it with
+        the role of researcher.
 
         :param credentials: email e password
+
         :return: TokenResponse com JWT e dados do utilizador
+
         :raises HTTPException 401: se as credenciais forem inválidas
         """
-        # 1. Validar no LDAP
         ldap_user = self._ldap.authenticate_by_email(
             credentials.email,
             credentials.password,
@@ -53,7 +47,6 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        # 2. Sync com a base de dados local
         user = await self._sync_user(ldap_user)
 
         token = self._create_token(user)
@@ -68,18 +61,15 @@ class AuthService:
             user_role=str(user.role.value)
         )
 
-    # ------------------------------------------------------------------
-    # Helpers privados
-    # ------------------------------------------------------------------
-
     async def _sync_user(self, ldap_user: LDAPUser) -> User:
         """
-        Garante que existe um registo local para o utilizador LDAP.
-        - Se não existir → cria
-        - Se existir → actualiza nome (pode ter mudado no LDAP)
+        Guarantees there is no local record for the LDAP user.
+        If there isn't, creates it, if there is, updates the name.
+        The userRole is given here, researcher by default.
 
-        O role é determinado aqui — por defeito 'researcher'.
-        Para promover a admin, alterar manualmente na DB ou via manage users.
+        :param ldap_user: LDAPUser
+
+        :return: User
         """
         async with self._repos as repos:
             user = await repos.users.get_by_email(ldap_user.mail)
@@ -103,11 +93,13 @@ class AuthService:
             await repos.commit()
             return user
 
-    def _create_token(self, user: User) -> str:
-        """Cria um JWT com os dados do utilizador."""
+    @staticmethod
+    def _create_token(user: User) -> str:
+        """Creates a JWT Token for the user"""
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.JWT_EXPIRE_MINUTES
         )
+
         payload = {
             "sub":   str(user.id),
             "email": user.email,
@@ -115,6 +107,7 @@ class AuthService:
             "role":  str(user.role.value),
             "exp":   expire,
         }
+
         return jwt.encode(
             payload,
             settings.JWT_SECRET,
