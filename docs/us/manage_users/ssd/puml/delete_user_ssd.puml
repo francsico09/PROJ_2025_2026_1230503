@@ -1,0 +1,21 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+participant System as sys
+
+title Delete User SSD
+
+activate user
+    user -> sys: selects user to deletet on the "Manage Users" page
+
+    activate sys
+        sys --> user: asks for confirmation
+        user -> sys: confirms
+        sys -> sys: deletes user
+        sys --> user: success message
+    deactivate sys
+deactivate user
+
+@enduml

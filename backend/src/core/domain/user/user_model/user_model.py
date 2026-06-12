@@ -25,7 +25,7 @@ class User:
         if user_data.email:
             self.email = user_data.email
 
-        if user_data.active:
+        if user_data.active is not None:
             self.active = user_data.active
 
         if user_data.role:

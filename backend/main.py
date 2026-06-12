@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import src.database.models
+from src.modules.scheduler.setup.scheduler_setup import stop_scheduler, start_scheduler
 
 from seed import bootstrap
 from src.core.session import engine
@@ -30,10 +31,14 @@ async def lifespan(app: FastAPI):
         import traceback
         traceback.print_exc()
 
+    scheduler = start_scheduler()
+
     yield
 
+    stop_scheduler()
+
 app = FastAPI(
-    title="Research Intelligence Platform",
+    title="Research Analytics and Metrics Platform",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -46,9 +51,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router,       prefix="/api/v1")
-app.include_router(users_router,      prefix="/api/v1")
-app.include_router(metrics_router,    prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")
+app.include_router(metrics_router, prefix="/api/v1")
 app.include_router(extraction_router, prefix="/api/v1")
 app.include_router(profile_controller, prefix="/api/v1")
 app.include_router(export_controller, prefix="/api/v1")

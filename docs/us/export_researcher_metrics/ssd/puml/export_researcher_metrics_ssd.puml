@@ -1,0 +1,30 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+participant System as sys
+
+title Export Researcher Metrics
+
+activate user
+    user -> sys: I want to export all researchers metrics
+    sys --> user: presents export page
+
+    activate sys
+
+        alt specific user
+            user -> sys: I want to export a researcher metrics
+            sys --> user: presents export page
+            user -> sys: select user
+        end alt
+
+            user -> sys: inputs file type (CSV/XLSX)
+            user -> sys: inputs aggregation level (history/date range/latest)
+            sys -> sys: creates files
+            sys --> user: success message
+            sys --> user: file
+    deactivate sys
+deactivate user
+
+@enduml

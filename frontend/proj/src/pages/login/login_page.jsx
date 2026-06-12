@@ -23,10 +23,6 @@ export default function LoginPage({ onLogin }) {
 
         try {
             const data = await login(email, password);
-            console.log('LOGIN RESPONSE:', data);
-            if (!data.user_id) {
-                console.log('User ID missing from server response');
-            }
 
             const user = {
                 id: data.user_id,

@@ -17,11 +17,12 @@ class ResearcherProfileResponse(BaseModel):
 
     metrics: list[ResearcherMetricResponse]
     keywords: list[str]
-    biography: str
+    biography: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
 class ResearcherProfileCreate(BaseModel):
+    user_id: uuid.UUID
     keywords: Optional[list[str]] = []
 
     # External ID's, all optional
@@ -44,7 +45,7 @@ class ResearcherProfileUpdate(BaseModel):
 
     metrics: Optional[list[ResearcherMetricResponse]] = []
     keywords: Optional[list[str]] = []
-    biography: Optional[str] = []
+    biography: Optional[str] = None
     affiliation: Optional[str] = None
 
 model_config = {"from_attributes": True}

@@ -4,7 +4,10 @@ import MetricCreateView from './metrics_create_view.jsx';
 
 const EMPTY_FORM = {
     h_index: '',
+    h_index_5y: '',
     i10_index: '',
+    i10_index_5y: '',
+    citations_5y: '',
     total_citations: '',
     total_publications: '',
     source_name: 'scholar',
@@ -35,7 +38,10 @@ export default function MetricCreateFromUserPage({ user, onBack }) {
             await create({
                 researcher_id: user.id,
                 h_index: Number(form.h_index),
+                h_index_5y: Number(form.h_index_5y),
                 i10_index: Number(form.i10_index),
+                i10_index_5y: Number(form.i10_index_5y),
+                citations_5y: Number(form.citations_5y),
                 total_citations: Number(form.total_citations),
                 total_publications: Number(form.total_publications),
                 source: {
@@ -57,7 +63,6 @@ export default function MetricCreateFromUserPage({ user, onBack }) {
         <MetricCreateView
             form={{ ...form, researcher_id: user.id }}
             researchers={[user]}
-            loadingUsers={false}
             saving={saving}
             success={success}
             error={error}

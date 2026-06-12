@@ -1,0 +1,36 @@
+@startuml
+!theme plain
+skinparam shadowing false
+
+actor "Researcher" as researcher
+actor "Administrator" as admin
+
+rectangle "Research Analytics and Metrics Platform" <<System>> {
+
+    rectangle "SPA\n[React]\n\nWeb interface. Allows for\nseeing metrics and profiles,\nand exporting data." as spa
+
+    rectangle "Backend\n[Python / FastAPI]\n\nExposes REST API. Contains\nbusiness logic, authentication\nand coordination for extractions." as backend
+
+    database "Database\n[PostgreSQL]\n\nStores researcher profiles,\nextracted metrics and\nextraction history." as db
+}
+
+rectangle "External Systems" <<External System>> {
+    rectangle "Google Scholar\n[External System]\n\nScraping via scholarly" as scholar #f5f5f5
+    rectangle "Scopus\n[External System]\n\nREST API" as scopus #f5f5f5
+    rectangle "Web of Science\n[External System]\n\nREST API" as wos #f5f5f5
+    rectangle "ORCID\n[External System]\n\nREST API" as orcid #f5f5f5
+    rectangle "LDAP GECAD\n[External System]\n\nInstitutional authentication" as ldap #f5f5f5
+}
+
+researcher ---> spa : Uses\n[HTTPS]
+admin ---> spa : Uses\n[HTTPS]
+
+spa --> backend : REST Requests\n[HTTP / JSON]
+backend --> db : Reads and writes\n[asyncpg / TCP]
+backend --> ldap : Authenticates users\n[LDAP]
+backend --> scholar : Extracts metrics\n[HTTP / scraping]
+backend --> scopus : Extracts metrics\n[HTTP / REST]
+backend --> wos : Extracts metrics\n[HTTP / REST]
+backend --> orcid : Synchronizes profile\n[HTTP / REST]
+
+@enduml

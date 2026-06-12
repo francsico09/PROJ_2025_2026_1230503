@@ -23,7 +23,11 @@ class PostgresUserRepository(PostgresBaseRepository, UserRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def fetch(self, params: PaginationParams) -> PaginatedResponse:
+    async def fetch(
+            self,
+            params: PaginationParams,
+            exclude_names: list[str] = None
+    ) -> PaginatedResponse:
         """
         Implementations of the fetch method. Returns a paginated and filtered
         result given certain parameters.
@@ -34,6 +38,11 @@ class PostgresUserRepository(PostgresBaseRepository, UserRepository):
 
         :return: PaginatedResponse
         """
+        extra_filters = []
+
+        if exclude_names:
+            extra_filters.append(UserORM.name.notin_(exclude_names))
+
         return await self._fetch_paginated(
             model=UserORM,
             params=params,
@@ -44,7 +53,8 @@ class PostgresUserRepository(PostgresBaseRepository, UserRepository):
             load_options=[
                 selectinload(UserORM.researcher_profile)
                 .selectinload(ResearcherProfileORM.metrics)
-            ]
+            ],
+            extra_filters=extra_filters or None,
         )
 
     async def get_all(self) -> list[User]:
@@ -61,7 +71,7 @@ class PostgresUserRepository(PostgresBaseRepository, UserRepository):
     async def get_by_email(
             self,
             email: str
-    ) -> User:
+    ) -> Optional[User]:
         """
         Function to fetch users by email. If there are no users with the provided email,
         the list is returned empty.

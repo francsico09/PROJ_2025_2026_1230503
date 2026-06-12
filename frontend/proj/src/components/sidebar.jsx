@@ -30,8 +30,8 @@ export default function Sidebar({active, onNavigate, onLogout, user}) {
     return (
         <aside className="sidebar">
             <div className="sidebar-logo">
-                <h1 className="sidebar-logo-title">RIP</h1>
-                <p className="sidebar-logo-sub">Research Intelligence</p>
+                <h1 className="sidebar-logo-title">RAMP</h1>
+                <p className="sidebar-logo-sub">Research Analytics and Metrics Platform</p>
             </div>
 
             {user && (

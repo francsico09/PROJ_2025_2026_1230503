@@ -20,7 +20,6 @@ class WosExtractor:
         }
 
     def extract(self, user_name: str, keywords: list[str]) -> Optional[RawWosMetrics]:
-        print(settings.WOS_API_KEY)
         try:
             docs = self._fetch_all_documents(user_name, keywords)
 

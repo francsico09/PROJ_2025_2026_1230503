@@ -48,9 +48,9 @@ class ResearcherMetricResponse(BaseModel):
 
 class ResearcherMetricCreate(BaseModel):
     researcher_id: uuid.UUID
-    extraction_run_id: uuid.UUID
+    extraction_run_id: Optional[uuid.UUID] = None
     source: SourceModel
-    date: datetime
+    date: Optional[datetime] = None
 
     h_index: int
     total_citations: int
@@ -64,6 +64,8 @@ class ResearcherMetricCreate(BaseModel):
 
     publications: list[dict] = []
 
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
 class ResearcherMetricUpdate(BaseModel):
     h_index: Optional[int] = None
     total_citations: Optional[int] = None
@@ -74,6 +76,8 @@ class ResearcherMetricUpdate(BaseModel):
     citations_5y: Optional[int] = None
     cites_per_year: Optional[dict] = None
     source: Optional[SourceModel] = None
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 class OrgAverageMetricsResponse(BaseModel):
     source:              str
@@ -86,3 +90,5 @@ class OrgAverageMetricsResponse(BaseModel):
     h_index_5y:          Optional[float] = None
     i10_index_5y:        Optional[float] = None
     citations_5y:        Optional[float] = None
+
+    model_config = {"from_attributes": True, "populate_by_name": True}

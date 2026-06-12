@@ -1,0 +1,83 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+
+participant ":UI" as ui
+participant ":UserController" as controller
+participant ":UserService" as service
+participant ":LDAPService" as ldap_service
+participant ":PostgresUserRepository" as repo
+participant ":Repositories" as repos
+
+
+activate user
+    user -> ui: open user create form
+
+    activate ui
+        ui --> user: display user create form
+        user -> ui: submit user data
+        ui -> controller: POST: /users with user data
+
+        activate controller
+            controller -> service: create_user(user_data)
+
+            activate service
+                service -> ldap_service: exists_with_email(user_data.email)
+
+                ldap_service --> service: false
+
+                activate ldap_service
+                alt email not registered on ldap
+                    ldap_service --> service: true
+
+                    service --> controller: HTTP 400 BAD REQUEST
+
+                    controller --> ui: HTTP 400 BAD REQUEST
+
+                    ui --> user: display error message
+                end alt
+
+                deactivate ldap_service
+
+                service -> repos: _aenter_()
+                activate repos
+                    repos --> service
+                    service -> repo: get_by_email(user_data.email)
+
+                    activate repo
+                        repo --> service: None
+
+                    alt user already exists
+                        repo --> service: User
+                        deactivate repo
+
+                        service --> controller: HTTP 404 Not Found
+                        controller --> ui: HTTP 404 Not Found
+                        ui --> user: display error message
+                    end alt
+
+                    service -> service: User(user_data)
+                    service -> repo: save(user)
+
+                    activate repo
+                        repo --> service
+                    deactivate repo
+
+                    service -> repos: commit()
+                    service -> repos: _aexit_()
+
+                    repos --> service
+                    deactivate repos
+
+                service --> controller: UserResponse
+            deactivate service
+
+            controller --> ui: UserResponse
+        deactivate controller
+
+        ui --> user: display success message
+    deactivate ui
+deactivate user
+@enduml

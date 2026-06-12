@@ -1,0 +1,29 @@
+# Configuração para carregar variáveis de teste
+[pytest]
+minversion = 7.0
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+
+markers =
+    asyncio: marca testes como assíncrono (pytest-asyncio)
+    unit: marca testes unitários
+    integration: marca testes de integração
+    e2e: marca testes end-to-end
+
+asyncio_mode = auto
+
+addopts =
+    -v
+    --strict-markers
+    --disable-warnings
+    -p no:cacheprovider
+
+filterwarnings =
+    ignore::DeprecationWarning
+    ignore::PendingDeprecationWarning
+
+# Carregar variáveis de ambiente do arquivo .env.test
+# Nota: A configuração de env é feita via conftest.py diretamente
+

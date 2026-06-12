@@ -1,0 +1,44 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+
+participant System as system
+
+participant GoogleScholar as scholar
+participant Orcid as orcid
+participant WebOfScience as wos
+participant Scopus as scopus
+
+activate user
+    user -> system: request to extract metrics for researcher
+
+    activate system
+        system -> system: validate user/ profile
+
+        system -> scholar: fetch metrics using scholar_id
+        activate scholar
+            scholar --> system: return metrics data
+        deactivate scholar
+
+        system -> orcid: fetch profile information using orcid
+        activate orcid
+            orcid --> system: return metrics data
+        deactivate orcid
+
+        system -> wos: fetch metrics using name and keywords
+        activate wos
+            wos --> system: return metrics data
+        deactivate wos
+
+        system -> scopus: fetch metrics using name and keywords
+        activate scopus
+            scopus --> system: return metrics data
+        deactivate scopus
+        system -> system: store metrics in database
+
+        system --> user: return success response
+    deactivate system
+deactivate user
+@enduml

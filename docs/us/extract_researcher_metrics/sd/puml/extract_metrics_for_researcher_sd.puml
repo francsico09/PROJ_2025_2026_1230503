@@ -1,0 +1,140 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+
+participant UI as ui
+
+participant "Extraction\nController" as controller
+
+participant "Pipeline\nService" as pipeline_service
+participant "Extraction\nService" as extraction_service
+participant "Normalization\nService" as normalization_service
+participant "ResearcherMetric\nService" as metric_service
+participant "ExtractionRun\nService" as extraction_run_service
+
+participant "Postgres\nUser" as user_repo
+participant "Postgres\nResearcherProfile" as profile_repo
+participant "Postgres\nResearcherMetric" as metric_repo
+participant "Postgres\nExtractionRun" as extraction_run_repo
+
+participant "Scholar\nExtractor" as scholar_extractor
+participant "WoS\nExtractor" as wos_extractor
+participant "Scopus\nExtractor" as scopus_extractor
+participant "Orcid\nExtractor" as orcid_extractor
+
+participant Repositories as repos
+
+activate user
+    user -> ui: request metric extraction for user
+    activate ui
+        ui -> controller: GET: /extraction/run/{id}
+
+        activate controller
+            controller -> pipeline_service: run_for_user(user_id)
+
+            activate pipeline_service
+                pipeline_service -> extraction_service: extract_for_user(user_id)
+
+                activate extraction_service
+                    extraction_service -> repos: _aenter_()
+
+                    activate repos
+                        repos --> extraction_service
+                        extraction_service -> user_repo: get_by_id(user_id)
+
+                        activate user_repo
+                            user_repo --> extraction_service: User
+                        deactivate user_repo
+
+                            extraction_service -> profile_repo: get_by_id(user.profile.id)
+
+                        activate profile_repo
+                            profile_repo --> extraction_service: ResearcherProfile
+                        deactivate profile_repo
+
+                        extraction_service -> scholar_extractor: extract(query)
+                        activate scholar_extractor
+                            scholar_extractor --> extraction_service: RawScholarMetrics
+                        deactivate scholar_extractor
+
+                        extraction_service -> wos_extractor: extract(query)
+                        activate wos_extractor
+                            wos_extractor -> wos_extractor: _fetch_all_documents\n(user_name, keywords)
+                            wos_extractor --> extraction_service: RawWosMetrics
+                        deactivate wos_extractor
+
+                        extraction_service -> scopus_extractor: extract(user.name, profile.keywords)
+                        activate scopus_extractor
+                            scopus_extractor --> extraction_service: RawScopusMetrics
+                        deactivate scopus_extractor
+
+                        extraction_service -> orcid_extractor: extract_by_id(orcid)
+                        activate orcid_extractor
+                            orcid_extractor -> orcid_extractor: _fetch_profile\n(orcid)
+                            orcid_extractor --> extraction_service: RawOrcidProfile
+                        deactivate orcid_extractor
+
+                        extraction_service --> pipeline_service: RawExtractionResult
+                    deactivate extraction_service
+
+                    pipeline_service -> normalization_service: normalize(raw)
+
+                    activate normalization_service
+                        normalization_service -> profile_repo: get_by_user_id(raw.user_id)
+
+                        activate profile_repo
+                            profile_repo --> normalization_service: ResearcherProfile
+                        deactivate profile_repo
+
+                        normalization_service --> pipeline_service: NormalizationResult
+                    deactivate normalization_service
+
+                    pipeline_service -> extraction_run_service: create_run(normalize.run)
+
+                    activate extraction_run_service
+                        extraction_run_service -> extraction_run_repo: save(run)
+
+                        activate extraction_run_repo
+                            extraction_run_repo --> extraction_run_service
+
+                        deactivate extraction_run_repo
+
+                        extraction_run_service --> pipeline_service
+                    deactivate extraction_run_service
+
+                    loop m in normalized.metrics
+                        pipeline_service -> pipeline_service: ResearcherMetricCreate\n(normalized.metric)
+
+                        pipeline_service -> metric_service: create_metric(metric_data)
+
+                        activate metric_service
+                            metric_service -> metric_repo: save(metric)
+
+                            activate metric_repo
+                                metric_repo --> metric_service: ResearcherMetric
+                            deactivate metric_repo
+
+                            metric_service --> pipeline_service: ResearcherMetricResponse
+                        deactivate metric_service
+                        pipeline_service -> repos: commit()
+
+                        repos --> pipeline_service
+                    end loop
+
+                    pipeline_service -> repos: _aexit_()
+
+                    repos --> pipeline_service
+                deactivate repos
+
+                pipeline_service --> controller: ExtractionPipelineResult
+            deactivate pipeline_service
+
+            controller --> ui: HTTP 200 OK
+        deactivate controller
+
+        ui --> user: success message
+    deactivate ui
+deactivate user
+@enduml

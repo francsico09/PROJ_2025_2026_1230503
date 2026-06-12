@@ -1,7 +1,7 @@
 import uuid
 import datetime
 
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, TIMESTAMP
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship
 
@@ -16,7 +16,7 @@ class ExtractionRunORM(Base):
         ForeignKey("researcher_profiles.id"),
         nullable=False
     )
-    triggered_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    triggered_at = Column(TIMESTAMP(timezone=True), nullable=False)
     triggered_by = Column(String, nullable=False)
     status = Column(String, nullable=False, default='pending')
     sources_attempted = Column(ARRAY(String), nullable=False, default=[])

@@ -3,7 +3,6 @@ import Icon, { ICONS } from '../../../components/icon.jsx';
 export default function MetricCreateView({
                                              form,
                                              researchers,
-                                             loadingUsers,
                                              saving,
                                              success,
                                              error,
@@ -11,6 +10,9 @@ export default function MetricCreateView({
                                              onChange,
                                              onSubmit
                                          }) {
+    // Get the selected researcher's name
+    const selectedResearcher = researchers.find(r => r.id === form.researcher_id);
+    
     return (
         <div>
             <button className="back-btn" onClick={onBack}>
@@ -20,33 +22,13 @@ export default function MetricCreateView({
 
             <div className="page-header">
                 <h2>Create metric</h2>
-                <p>Manually add a new metric record for a researcher.</p>
+                <p>
+                    {selectedResearcher ? selectedResearcher.name : 'Manually add a new metric record for a researcher.'}
+                </p>
             </div>
 
             <form className="edit-card" onSubmit={onSubmit}>
-                <div className="edit-card-title">Researcher</div>
-
-                <div className="form-group">
-                    <label>Researcher</label>
-                    <select
-                        className="form-select"
-                        value={form.researcher_id}
-                        onChange={e => onChange('researcher_id', e.target.value)}
-                        required
-                        disabled={loadingUsers}
-                    >
-                        <option value="">
-                            {loadingUsers ? 'Loading…' : '— Select a researcher —'}
-                        </option>
-                        {researchers.map(u => (
-                            <option key={u.id} value={u.id}>{u.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="edit-card-title" style={{ marginTop: 8 }}>
-                    Metric values
-                </div>
+                <div className="edit-card-title">Metric values</div>
 
                 <div className="form-row">
                     <div className="form-group">
@@ -62,6 +44,20 @@ export default function MetricCreateView({
                     </div>
 
                     <div className="form-group">
+                        <label>h-index 5y</label>
+                        <input
+                            className="form-input"
+                            type="number"
+                            min={0}
+                            value={form.h_index_5y}
+                            onChange={e => onChange('h_index_5y', e.target.value)}
+                            optional
+                        />
+                    </div>
+                </div>
+
+                <div className="form-row">
+                    <div className="form-group">
                         <label>i10-index</label>
                         <input
                             className="form-input"
@@ -70,6 +66,18 @@ export default function MetricCreateView({
                             value={form.i10_index}
                             onChange={e => onChange('i10_index', e.target.value)}
                             required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>i10-index 5y</label>
+                        <input
+                            className="form-input"
+                            type="number"
+                            min={0}
+                            value={form.i10_index_5y}
+                            onChange={e => onChange('i10_index_5y', e.target.value)}
+                            optional
                         />
                     </div>
                 </div>
@@ -100,6 +108,18 @@ export default function MetricCreateView({
                     </div>
                 </div>
 
+                <div className="form-group">
+                    <label>Citations 5y</label>
+                    <input
+                        className="form-input"
+                        type="number"
+                        min={0}
+                        value={form.citations_5y}
+                        onChange={e => onChange('citations_5y', e.target.value)}
+                        optional
+                    />
+                </div>
+
                 <div className="edit-card-title" style={{ marginTop: 8 }}>
                     Source
                 </div>
@@ -113,8 +133,10 @@ export default function MetricCreateView({
                             onChange={e => onChange('source_name', e.target.value)}
                             required
                         >
-                            <option value="scholar">scholar</option>
-                            <option value="orcid">orcid</option>
+                            <option value="scholar">Google Scholar</option>
+                            <option value="orcid">ORCID</option>
+                            <option value="web_of_science">Web Of Science</option>
+                            <option value="scopus">Scopus</option>
                         </select>
                     </div>
 

@@ -13,6 +13,8 @@ from src.core.domain.researcher_profile.researcher_profile_schema.researcher_pro
     ResearcherProfileCreate, ResearcherProfileResponse, ResearcherProfileUpdate
 from src.core.domain.user.user_model.user_model import User
 
+from src.core.domain.user.user_model.user_role import UserRole
+
 
 class ResearcherProfileService:
     def __init__(self, repos: Repositories) -> None:
@@ -32,15 +34,37 @@ class ResearcherProfileService:
         """
 
         async with self._repos as repos:
-            existing_scholar = await repos.profiles.get_by_scholar_id(profile_data.scholar_id)
+            if not profile_data.user_id:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No User id provided")
 
-            if existing_scholar:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this Scholar ID already exists")
+            user = await repos.users.get_by_id(profile_data.user_id)
 
-            existing_scholar = await repos.profiles.get_by_orcid(profile_data.orcid)
-            if existing_scholar:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this ORCID already exists")
+            if not user:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User Not Found")
 
+            if profile_data.scholar_id:
+                existing_scholar = await repos.profiles.get_by_scholar_id(profile_data.scholar_id)
+
+                if existing_scholar:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this Scholar ID already exists")
+
+            if profile_data.orcid:
+                existing_orcid = await repos.profiles.get_by_orcid(profile_data.orcid)
+
+                if existing_orcid:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this ORCID already exists")
+
+            if profile_data.scopus_id:
+                existing_scopus = await repos.profiles.get_by_scopus_id(profile_data.scopus_id)
+
+                if existing_scopus:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this Scopus ID already exists")
+
+            if profile_data.wos_id:
+                existing_wos = await repos.profiles.get_by_wos_id(profile_data.wos_id)
+
+                if existing_wos:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this WoS ID already exists")
 
             profile = ResearcherProfile(
                 id=uuid.uuid4(),
@@ -49,14 +73,20 @@ class ResearcherProfileService:
                 scholar_id=profile_data.scholar_id if profile_data.scholar_id else None,
                 orcid=profile_data.orcid if profile_data.orcid else None,
                 wos_id=profile_data.wos_id if profile_data.wos_id else None,
+                scopus_id=profile_data.scopus_id if profile_data.scopus_id else None,
                 biography=profile_data.biography if profile_data.biography else None,
                 affiliation=profile_data.affiliation if profile_data.affiliation else None
             )
 
-            await repos.profiles.save(profile)
+            # Save the profile
+            saved_profile = await repos.profiles.save(profile)
+
+            user.researcherProfile = profile
+            await repos.users.save(user)
+
             await repos.commit()
 
-            return ResearcherProfileResponse.model_validate(profile)
+            return ResearcherProfileResponse.model_validate(saved_profile)
 
 
     async def delete_profile(
@@ -71,12 +101,16 @@ class ResearcherProfileService:
         :raises:
         """
         async with self._repos as repos:
-            profile = await repos.profiles.get_user_by_id(profile_id)
+            profile = await repos.profiles.get_by_id(profile_id)
 
             if not profile:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
 
-            await repos.users.delete(profile_id)
+            # Delete associated metrics
+            for metric in profile.metrics:
+                await repos.metrics.delete(metric.id)
+
+            await repos.profiles.delete(profile_id)
             await repos.commit()
 
 
@@ -100,16 +134,38 @@ class ResearcherProfileService:
             profile = await repos.profiles.get_by_id(profile_id)
 
             if not profile:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+                raise HTTPException(status_code=404, detail="Profile not found")
 
-            if current_user.role == 'researcher':
-                if profile_data.metrics:
-                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Only admins can update metrics")
+            is_researcher = current_user.role == UserRole.researcher
 
-                profile.update(profile_data)
+            if is_researcher and profile_data.metrics:
+                raise HTTPException(status_code=403, detail="Only admins can update metrics" )
 
-            else:
-                profile.update(profile_data)
+            profile.update(profile_data)
+
+            if profile_data.scholar_id:
+                existing_scholar = await repos.profiles.get_by_scholar_id(profile_data.scholar_id)
+
+                if existing_scholar:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this Scholar ID already exists")
+
+            if profile_data.orcid:
+                existing_orcid = await repos.profiles.get_by_orcid(profile_data.orcid)
+
+                if existing_orcid:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this ORCID already exists")
+
+            if profile_data.scopus_id:
+                existing_scopus = await repos.profiles.get_by_scopus_id(profile_data.scopus_id)
+
+                if existing_scopus:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this Scopus ID already exists")
+
+            if profile_data.wos_id:
+                existing_wos = await repos.profiles.get_by_wos_id(profile_data.wos_id)
+
+                if existing_wos:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A profile with this WoS ID already exists")
 
             await repos.profiles.save(profile)
             await repos.commit()

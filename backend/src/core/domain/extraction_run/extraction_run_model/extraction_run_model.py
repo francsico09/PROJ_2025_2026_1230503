@@ -10,6 +10,7 @@ from src.core.domain.researcher_metric.researcher_metric_model.source_model impo
 class ExtractionTrigger(str, Enum):
     manual    = 'manual'
     scheduled = 'scheduled'
+    created_by_admin = 'created_by_admin'
 
 class ExtractionStatus(str, Enum):
     pending   = 'pending'

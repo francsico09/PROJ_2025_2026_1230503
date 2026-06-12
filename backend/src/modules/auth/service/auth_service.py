@@ -35,19 +35,23 @@ class AuthService:
 
         :raises HTTPException 401: se as credenciais forem inválidas
         """
-        ldap_user = self._ldap.authenticate_by_email(
-            credentials.email,
-            credentials.password,
-        )
-
-        if not ldap_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid Credentials",
-                headers={"WWW-Authenticate": "Bearer"},
+        # Bypass LDAP for admin
+        if self._is_admin_login(credentials):
+            user = await self._get_or_create_admin()
+        else:
+            ldap_user = self._ldap.authenticate_by_email(
+                credentials.email,
+                credentials.password,
             )
 
-        user = await self._sync_user(ldap_user)
+            if not ldap_user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid Credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            user = await self._sync_user(ldap_user)
 
         token = self._create_token(user)
 
@@ -60,6 +64,32 @@ class AuthService:
             user_email=user.email,
             user_role=str(user.role.value)
         )
+
+    @staticmethod
+    def _is_admin_login(credentials: LoginRequest) -> bool:
+        return (
+                credentials.email    == settings.ADMIN_EMAIL and
+                credentials.password == settings.ADMIN_PASSWORD
+        )
+
+    async def _get_or_create_admin(self) -> User:
+        async with self._repos as repos:
+            user = await repos.users.get_by_email(settings.ADMIN_EMAIL)
+
+            if not user:
+                user = User(
+                    id=uuid.uuid4(),
+                    name="Admin",
+                    email=settings.ADMIN_EMAIL,
+                    active=True,
+                    role=UserRole.admin,
+                    researcherProfile=None,
+                )
+                await repos.users.save(user)
+                await repos.commit()
+
+            return user
+
 
     async def _sync_user(self, ldap_user: LDAPUser) -> User:
         """

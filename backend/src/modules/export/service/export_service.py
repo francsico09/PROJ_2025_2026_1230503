@@ -5,12 +5,12 @@ import uuid
 from datetime import date, datetime, time, timezone
 
 from fastapi import HTTPException
+from ldap3.utils.log import set_library_log_hide_sensitive_data
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from starlette import status
 
 from src.core.repositories.repositories import Repositories
-
 from src.core.domain.export.export_schema.export_schemas import ExportFormat, ExportScope
 
 HEADERS = [
@@ -32,6 +32,69 @@ class ExportService:
     def __init__(self, repos: Repositories) -> None:
         self._repos = repos
 
+    async def export_all(
+            self,
+            fmt: ExportFormat,
+            scope: ExportScope,
+            start_date: date | None = None,
+            end_date: date | None = None,
+    ) -> tuple[bytes, str]:
+        async with self._repos as repos:
+            users = await repos.users.get_all()
+
+        all_data = b""
+        all_rows = []
+
+        for user in users:
+            if not user.active:
+                continue
+
+            try:
+                rows = await self.build_rows(user.id, scope, start_date, end_date)
+                all_rows.extend(rows)
+
+            except Exception:
+                continue
+
+        if fmt == ExportFormat.csv:
+            import csv, io
+            buf = io.StringIO()
+            writer = csv.writer(buf)
+            writer.writerow(HEADERS)
+            writer.writerows(all_rows)
+            all_data = buf.getvalue().encode("utf-8-sig")
+            filename = "metrics_all.csv"
+
+        else:
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "All Metrics"
+            header_fill = PatternFill("solid", fgColor="1A3A5C")
+            header_font = Font(color="FFFFFF", bold=True, size=11)
+
+            for col_idx, header in enumerate(HEADERS, start=1):
+                cell = ws.cell(row=1, column=col_idx, value=header)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center")
+
+            for row_idx, row in enumerate(all_rows, start=2):
+                for col_idx, value in enumerate(row, start=1):
+                    ws.cell(row=row_idx, column=col_idx, value=value)
+
+            for col in ws.columns:
+                max_len = max((len(str(cell.value or "")) for cell in col), default=10)
+                ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 50)
+
+            ws.freeze_panes = "A2"
+            import io
+            buf = io.BytesIO()
+            wb.save(buf)
+            all_data = buf.getvalue()
+            filename = "metrics_all.xlsx"
+
+        return all_data, filename
+
     async def export(
             self,
             researcher_id: uuid.UUID,
@@ -51,6 +114,7 @@ class ExportService:
         :return: (bytes do ficheiro, filename)
         :raises HTTPException 404: se o investigador não existir
         """
+
         rows = await self.build_rows(researcher_id, scope, start_date, end_date)
 
         if fmt == ExportFormat.csv:
@@ -75,6 +139,18 @@ class ExportService:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Researcher not found",
+                )
+
+            if  not user.active:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Researcher is inactive"
+                )
+
+            if not user.researcherProfile:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Researcher Profile not found",
                 )
 
             profile = user.researcherProfile

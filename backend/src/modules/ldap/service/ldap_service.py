@@ -75,6 +75,13 @@ class LDAPService:
         ldap_user = self._bind_as_user(user_dn, password)
         return ldap_user
 
+    def exists_with_email(self, email: str) -> bool:
+        user_dn, attrs = self._search_user(filter_=f"(mail={email})")
+        if not user_dn:
+            logger.warning(f"[LDAP] Email not found: {email}")
+            return False
+
+        return True
     # ------------------------------------------------------------------
     # Helpers privados
     # ------------------------------------------------------------------

@@ -45,7 +45,7 @@ async def delete_metric(
 
 @router.patch(
     "/{metric_id}",
-    response_model=ResearcherMetricResponse,
+    response_model=PaginatedResponse[ResearcherMetricResponse],
     status_code=status.HTTP_200_OK,
     summary="Update researcher metric",
 )
@@ -85,12 +85,13 @@ async def fetch_metrics(
 
 @router.get(
     "/latest-by-user",
-    response_model=list[ResearcherMetricResponse],
+    response_model=PaginatedResponse[ResearcherMetricResponse],
     status_code=status.HTTP_200_OK,
     summary="Get latest researcher metric per researcher",
 )
 async def fetch_latest_by_user(
         source: str | None = None,
+        params: PaginationParams = Depends(),
         service: ResearcherMetricService = Depends(get_researcher_metric_service),
 ):
-    return await service.fetch_latest_by_user(source)
+    return await service.fetch_latest_by_user(source, params)

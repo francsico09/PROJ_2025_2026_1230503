@@ -65,4 +65,4 @@ async def fetch_profiles(
         service: ResearcherProfileService = Depends(get_researcher_profile_service),
         params: PaginationParams = Depends()
 ) -> list[ResearcherProfileResponse]:
-    return await service.fetch(params)
+    return await service.fetch_profiles(params)

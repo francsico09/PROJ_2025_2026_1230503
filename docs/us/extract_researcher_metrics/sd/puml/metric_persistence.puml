@@ -1,0 +1,33 @@
+@startuml
+participant "Pipeline\nService" as pipeline_service
+participant "ResearcherMetric\nService" as metric_service
+
+participant "Postgres\nResearcherMetric" as metric_repo
+
+
+participant Repositories as repos
+
+autonumber
+activate pipeline_service
+    activate repos
+                    loop m in normalized.metrics
+                        pipeline_service -> pipeline_service: ResearcherMetricCreate\n(normalized.metric)
+
+                        pipeline_service -> metric_service: create_metric(metric_data)
+
+                        activate metric_service
+                            metric_service -> metric_repo: save(metric)
+
+                            activate metric_repo
+                                metric_repo --> metric_service: ResearcherMetric
+                            deactivate metric_repo
+
+                            metric_service --> pipeline_service: ResearcherMetricResponse
+                        deactivate metric_service
+                        pipeline_service -> repos: commit()
+
+                        repos --> pipeline_service
+                    end loop
+    deactivate repos
+deactivate pipeline_service
+@enduml

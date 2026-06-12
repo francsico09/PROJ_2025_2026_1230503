@@ -29,10 +29,10 @@ class UserCreate(BaseModel):
     model_config = {"from_attributes": True}
 
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    email: Optional[str]
-    active: Optional[bool]
-    role: Optional[UserRole]
+    name: Optional[str] = None
+    email: Optional[str] = None
+    active: Optional[bool] = None
+    role: Optional[UserRole] = None
 
     model_config = {"from_attributes": True}
 

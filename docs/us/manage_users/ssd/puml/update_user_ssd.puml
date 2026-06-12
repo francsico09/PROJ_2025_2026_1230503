@@ -1,0 +1,21 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+participant System as sys
+
+title Update User SSD
+
+activate user
+    user -> sys: selects user to update from "Manage Users" page
+
+    activate sys
+        sys --> user: presents user update form
+        user -> sys: enters update information
+        sys -> sys: validates
+        sys --> user: success message
+    deactivate sys
+deactivate user
+
+@enduml

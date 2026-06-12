@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import Optional
 
 from uuid import UUID
 
@@ -17,6 +18,9 @@ from src.core.domain.researcher_metric.researcher_model_schema.researcher_metric
     ResearcherMetricCreate
 from src.modules.researcher_metric.service.researcher_metric_service import ResearcherMetricService
 
+from src.core.domain.researcher_metric.researcher_model_schema.researcher_metric_schemas import \
+    ResearcherMetricResponse
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,6 +31,7 @@ class ExtractionPipelineResult:
         self.profile_updated: bool = False
         self.skipped_reasons: list[str] = []
         self.errors: list[str] = []
+        self.metrics: list[ResearcherMetricResponse] = []
 
 
 class PipelineService:
@@ -74,8 +79,6 @@ class PipelineService:
                 run = await self._run_service.create_run(normalized.run, repos=repos)
 
                 if normalized.metrics:
-                    print(normalized.metrics)
-
                     for m in normalized.metrics:
                         if not m.is_duplicate:
                             logger.info(m)
@@ -107,10 +110,31 @@ class PipelineService:
                                 ]
                             )
 
-                            await self._metric_service.create_metric(metric_data)
+                            created_metric = await self._metric_service.create_metric(metric_data)
                             await repos.commit()
 
                             pipeline_result.metric_created = True
+
+                            pipeline_result.metrics.append(
+                                ResearcherMetricResponse(
+                                    id=created_metric.id,
+                                    researcher_id=metric_data.researcher_id,
+                                    extraction_run_id=metric_data.extraction_run_id,
+                                    source=metric_data.source,
+                                    date=metric_data.date,
+                                    h_index=metric_data.h_index,
+                                    total_citations=metric_data.total_citations,
+                                    total_publications=metric_data.total_publications,
+
+                                    i10_index=metric_data.i10_index,
+                                    h_index_5y=metric_data.h_index_5y,
+                                    i10_index_5y=metric_data.i10_index_5y,
+                                    citations_5y=metric_data.citations_5y,
+                                    cites_per_year=metric_data.cites_per_year,
+
+                                    publications=metric_data.publications
+                                )
+                            )
 
             except Exception as e:
                 await repos.rollback()
@@ -139,16 +163,19 @@ class PipelineService:
             pr.skipped_reasons.extend(normalized.skipped_reasons)
 
             try:
-                if normalized.metric and not normalized.metric.is_duplicate:
-                    metric_data = ResearcherMetricCreate(
-                        h_index=normalized.metric.h_index,
-                        i10_index=normalized.metric.i10_index,
-                        total_citations=normalized.metric.total_citations,
-                        total_publications=normalized.metric.total_publications,
-                        source=normalized.metric.source,
-                    )
-                    await self._metric_service.create_metric(normalized.user_id, metric_data)
-                    pr.metric_created = True
+                if normalized.metrics:
+                    for metric in normalized.metrics:
+                        if metric is not metric.is_duplicate:
+                            metric_data = ResearcherMetricCreate(
+                                researcher_id=metric.researcher_id,
+                                h_index=normalized.metric.h_index,
+                                i10_index=normalized.metric.i10_index,
+                                total_citations=normalized.metric.total_citations,
+                                total_publications=normalized.metric.total_publications,
+                                source=normalized.metric.source,
+                            )
+                            await self._metric_service.create_metric(metric_data)
+                            pr.metric_created = True
 
                 if normalized.profile_update:
                     await self._persist_profile_update(normalized, pr)
@@ -178,10 +205,12 @@ class PipelineService:
                 if profile:
                     if update.biography:
                         profile.biography = update.biography
+
                     if update.keywords:
                         profile.keywords = update.keywords
-                    if hasattr(update, 'orcid_id') and update.orcid_id:
-                        profile.orcid_id = update.orcid_id
+
+                    if hasattr(update, 'orcid') and update.orcid:
+                        profile.orcid = update.orcid
 
                     await repos.profiles.save(profile)
                     await repos.commit()

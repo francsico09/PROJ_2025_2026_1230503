@@ -76,8 +76,23 @@ export const fetchMetricByUser = (
     });
 };
 
-export const getLatestByUser = (token, source = '') => {
-    const params = new URLSearchParams();
+export const getLatestByUser = (
+    token,
+    source = '',
+    {
+        page = 1,
+        pageSize = 20,
+        search = '',
+        sortBy = 'date',
+        sortDir = 'desc',
+    } = {}) => {
+    const params = new URLSearchParams({
+        page,
+        page_size: pageSize,
+        search,
+        sort_by: sortBy,
+        sort_dir: sortDir,
+    });
 
     if (source) {
         params.append('source', source);

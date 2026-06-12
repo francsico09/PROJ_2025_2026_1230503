@@ -1,6 +1,7 @@
+import math
 import uuid
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc, asc
 from sqlalchemy import delete
 
 from src.database.models.researcher_metric_orm import ResearcherMetricORM
@@ -131,8 +132,9 @@ class PostgresResearcherMetricRepository(PostgresBaseRepository, ResearcherMetri
 
     async def fetch_latest_by_user(
             self,
-            source: str | None = None
-    ) -> ResearcherMetric:
+            source: str | None = None,
+            pagination: PaginationParams = None
+    ) -> PaginatedResponse:
         m = ResearcherMetricORM
 
         subq = (
@@ -148,7 +150,7 @@ class PostgresResearcherMetricRepository(PostgresBaseRepository, ResearcherMetri
 
         subq = subq.subquery()
 
-        query = (
+        base_query = (
             select(m)
             .join(
                 subq,
@@ -158,12 +160,41 @@ class PostgresResearcherMetricRepository(PostgresBaseRepository, ResearcherMetri
         )
 
         if source:
-            query = query.where(m.source == source)
+            base_query = base_query.where(m.source == source)
 
-        result = await self._session.execute(query)
+        count_query = select(func.count()).select_from(base_query.subquery())
+        total_result = await self._session.execute(count_query)
+        total = total_result.scalar() or 0
+
+        if pagination:
+            column = getattr(m, pagination.sort_by, None)
+            if column is None:
+                column = m.date
+
+            if pagination.sort_dir == "desc":
+                base_query = base_query.order_by(desc(column))
+            else:
+                base_query = base_query.order_by(asc(column))
+
+            offset = (pagination.page - 1) * pagination.page_size
+            base_query = base_query.offset(offset).limit(pagination.page_size)
+
+        result = await self._session.execute(base_query)
         rows = result.scalars().all()
 
-        return [r.to_domain() for r in rows]
+        items = [r.to_domain() for r in rows]
+
+        page_size = pagination.page_size if pagination else 20
+        current_page = pagination.page if pagination else 1
+        pages = math.ceil(total / page_size) if total > 0 else 1
+
+        return PaginatedResponse(
+            items=items,
+            total=total,
+            page=current_page,
+            page_size=page_size,
+            pages=pages
+        )
 
     async def get_by_researcher_id(
             self,

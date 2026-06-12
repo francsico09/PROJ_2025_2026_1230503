@@ -1,28 +1,32 @@
 const BASE = '/api/v1/users';
 
 export const fetchUsers = (token,
-                         {
-                             page = 1,
-                             pageSize = 20,
-                             search = '',
-                             sortBy = 'name',
-                             sortDir = 'asc' } = {}
+                           {
+                               page = 1,
+                               pageSize = 20,
+                               search = '',
+                               sortBy = 'name',
+                               sortDir = 'asc',
+                               exclude_names = []
+                           } = {}
 ) => {
     const params = new URLSearchParams(
         {
-        page, page_size:
-        pageSize,
-        search,
-        sort_by: sortBy,
-        sort_dir: sortDir
-    });
+            page, page_size:
+            pageSize,
+            search,
+            sort_by: sortBy,
+            sort_dir: sortDir
+        });
+
+    exclude_names.forEach(name => params.append('exclude_names', name));
 
     return fetch(`/api/v1/users/?${params}`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         }
-    }
     ).then(async r => {
         if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
         return r.json();
@@ -51,7 +55,7 @@ export const updateUser = (id, data, token) =>
 
 export const deleteUser = (id, token) =>
     fetch(`${BASE}/${id}`, {
-        method: 'DELETE' ,
+        method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`
         }

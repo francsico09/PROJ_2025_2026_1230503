@@ -1,0 +1,21 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+participant System as sys
+
+title Create User SSD
+
+activate user
+    user -> sys: selects "New User" on the "Manage Users" page
+
+    activate sys
+        sys --> user: presents user create form
+        user -> sys: inputs new user information
+        sys -> sys: creates user
+        sys --> user: success message
+    deactivate sys
+deactivate user
+
+@enduml

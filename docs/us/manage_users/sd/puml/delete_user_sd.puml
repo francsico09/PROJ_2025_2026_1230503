@@ -1,0 +1,64 @@
+@startuml
+
+autonumber
+
+actor Admin as user
+
+participant ":UI" as ui
+participant ":UserController" as controller
+participant ":UserService" as service
+participant ":PostgresUserRepository" as repo
+participant ":Repositories" as repos
+
+activate user
+    user -> ui: select delete user option
+
+    activate ui
+        ui --> user: asks for confirmation
+        user -> ui: confirms
+
+        ui -> controller: DELETE: /users/{id}
+
+        activate controller
+            controller -> service: delete_user(user_id)
+
+            activate service
+                service -> repos: _aenter_()
+                activate repos
+                    repos --> service
+                    service -> repo: get_by_id(user_id)
+
+                    activate repo
+                        repo --> service: User
+
+                    alt user not found
+                        repo --> service: None
+                        deactivate repo
+
+                        service --> controller: HTTP 400 Bad Request
+                        controller --> ui: HTTP 400 Bad Request
+                        ui --> user: display error message
+                    end alt
+
+                    service -> repo: delete(user_id)
+
+                    activate repo
+                        repo --> service
+                    deactivate repo
+
+                    service -> repos: commit()
+                    service -> repos: _aexit_()
+
+                    repos --> service
+                    deactivate repos
+
+                service --> controller
+            deactivate service
+
+            controller --> ui
+        deactivate controller
+
+        ui --> user: display success message
+    deactivate ui
+deactivate user
+@enduml

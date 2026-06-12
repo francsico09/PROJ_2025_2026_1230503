@@ -28,6 +28,7 @@ class ExtractionService:
             scopus_extractor: ScopusExtractor
     ) -> None:
         self._repos = repos
+
         self._scholar = scholar_extractor
         self._orcid = orcid_extractor
         self._wos = wos_extractor
@@ -53,7 +54,9 @@ class ExtractionService:
                                          status=ExtractionStatus.pending,
                                          sources_attempted=[],
                                          sources_succeeded=[],
-                                     ))
+                                     ),
+                                     #errors=[]
+                                     )
 
         # --- Scholar ---
         result.run.sources_attempted.append(SourceName.scholar)
@@ -90,7 +93,7 @@ class ExtractionService:
         scopus_identifier = profile.scopus_id if profile.scopus_id else user.name
 
         if scopus_identifier:
-            scopus_data = self._scopus.extract(scopus_identifier)
+            scopus_data = self._scopus.extract(scopus_identifier, user.name)
             if scopus_data:
                 result.run.sources_succeeded.append(SourceName.scopus)
                 result.scopus = scopus_data
@@ -127,13 +130,31 @@ class ExtractionService:
         for user in users:
             if not user.active:
                 continue
+
+            profile = user.researcherProfile
+
+            if not profile:
+                logger.warning(f"[Extraction] No profile for user {user.id}, skipping.")
+                continue
+
             try:
                 result = await self.extract_for_user(user.id)
                 results.append(result)
+
             except Exception as e:
                 logger.error(f"[Extraction] Error for user {user.id}: {e}")
+
                 results.append(RawExtractionResult(
                     user_id=str(user.id),
+                    run=ExtractionRun(
+                        id=uuid.uuid4(),
+                        researcher_id=profile.id,
+                        triggered_at=datetime.now(),
+                        triggered_by=ExtractionTrigger.manual,
+                        status=ExtractionStatus.pending,
+                        sources_attempted=[],
+                        sources_succeeded=[],
+                    ),
                     errors=[f"fatal error: {str(e)}"],
                 ))
 

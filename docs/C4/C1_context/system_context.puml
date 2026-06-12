@@ -1,0 +1,30 @@
+@startuml
+!theme plain
+skinparam shadowing false
+
+component "Researcher Intelligence Platform" as platform
+component "Google Scholar" as scholar
+component "Scopus" as scopus
+component "Web of Science" as wos
+component "ORCID" as orcid
+component "LDAP GECAD" as ldap
+
+platform - "REST API"
+platform - "UI"
+
+platform -> scholar : Extracts metrics\n[scraping]
+
+platform ---( "Scopus API"
+scopus --- "Scopus API"
+
+platform ---( "WoS API"
+wos --- "WoS API"
+
+platform ---( "ORCID API"
+orcid --- "ORCID API"
+
+platform ---( LDAP
+ldap --- LDAP
+
+
+@enduml

@@ -53,7 +53,6 @@ class NormalizationService:
 
         # --- WoS ---
         if raw.wos:
-            print('[NORMALIZATION SERVICE] RAW WOS PUBS EXTRACTED: ', raw.wos.publications)
 
             metric = await self._normalize_metric(
                 researcher_id=researcher.id,
@@ -94,6 +93,7 @@ class NormalizationService:
                 logger.error(f"[Normalization] Error for user {raw.user_id}: {e}")
                 normalized.append(NormalizationResult(
                     user_id=raw.user_id,
+                    run=raw.run,
                     skipped_reasons=[f"Normalization error: {str(e)}"],
                 ))
         return normalized
@@ -112,7 +112,6 @@ class NormalizationService:
             cites_per_year: dict | None = None,
             publications: list[RawWosPublication] | None = None,
     ) -> NormalizedMetric:
-        print('[NORMALIZATION SERVICE] PUBS: ', publications)
 
         is_duplicate = await self._is_duplicate_metric(researcher_id, source, date.today())
 
@@ -128,8 +127,6 @@ class NormalizationService:
                     source_title=p.source_title,
                 )
             )
-
-        print('[NORMALIZATION SERVICE] CONVERTED PUBS: ', publications_converted)
 
         return NormalizedMetric(
             researcher_id=researcher_id,
@@ -156,6 +153,6 @@ class NormalizationService:
             existing = await repos.metrics.get_by_researcher_id(researcher_id)
 
         return any(
-            m.date == extraction_date and m.source == source
+            m.date == extraction_date and m.source.name == source.name
             for m in existing
         )

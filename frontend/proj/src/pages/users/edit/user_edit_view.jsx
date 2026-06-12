@@ -80,22 +80,6 @@ export default function UserEditView({
                     </div>
                 </div>
 
-                <div className="form-group">
-                    <label>
-                        Password
-                        {!isNew && <span className="hint"> — leave blank to keep current</span>}
-                    </label>
-                    <input
-                        className="form-input"
-                        type="password"
-                        placeholder={isNew ? 'Minimum 8 characters' : '••••••••'}
-                        value={form.password ?? ''}
-                        onChange={e => onChange('password', e.target.value)}
-                        required={isNew}
-                        minLength={isNew ? 8 : undefined}
-                    />
-                </div>
-
                 {success && (
                     <div className="alert alert-success">
                         <Icon d={ICONS.check} size={14} />

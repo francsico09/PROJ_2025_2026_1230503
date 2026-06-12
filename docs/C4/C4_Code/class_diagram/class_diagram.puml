@@ -1,0 +1,114 @@
+@startuml
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+enum UserRole {
+    admin
+    researcher
+}
+
+enum SourceName {
+    scholar
+    orcid
+    web_of_science
+    scopus
+}
+
+enum ExtractionTrigger {
+    manual
+    scheduled
+}
+
+enum ExtractionStatus {
+    pending
+    completed
+    partial
+    failed
+}
+
+class User {
+    +id: UUID
+    +name: str
+    +email: str
+    +active: bool
+    +role: UserRole
+    +researcherProfile: ResearcherProfile?
+    +update(user_data: UserUpdate)
+}
+
+class ResearcherProfile {
+    +id: UUID
+    +keywords: list[str]
+    +metrics: list[ResearcherMetric]
+    +scholar_id: str?
+    +orcid: str?
+    +wos_id: str?
+    +scopus_id: str?
+    +biography: str?
+    +affiliation: str?
+    +get_identifier(source: str): str?
+    +update(data: ResearcherProfileUpdate)
+}
+
+class ResearcherMetric {
+    +id: UUID
+    +researcher_id: UUID
+    +extraction_run_id: UUID
+    +source: Source
+    +date: datetime
+    +h_index: int
+    +total_citations: int
+    +total_publications: int
+    +i10_index: int?
+    +i10_index_5y: int?
+    +h_index_5y: int?
+    +citations_5y: int?
+    +cites_per_year: dict?
+    +publications: list[MetricPublication]?
+    +update(data: ResearcherMetricUpdate)
+}
+
+class MetricPublication {
+    +title: str
+    +times_cited: int
+    +year: int?
+    +doi: str?
+    +source_title: str?
+}
+
+class Source {
+    +name: SourceName
+    +url: str
+}
+
+class ExtractionRun {
+    +id: UUID
+    +researcher_id: UUID
+    +triggered_at: datetime
+    +triggered_by: ExtractionTrigger
+    +status: ExtractionStatus
+    +sources_attempted: list[SourceName]
+    +sources_succeeded: list[SourceName]
+}
+
+User --> UserRole : role
+User --> ResearcherProfile : researcherProfile (optional)
+
+ResearcherProfile --> ResearcherMetric : metrics *
+
+ResearcherMetric --> Source : source
+ResearcherMetric --> MetricPublication : publications *
+
+ResearcherMetric --> ResearcherProfile : researcher_id
+ExtractionRun --> ResearcherProfile : researcher_id
+
+ExtractionRun --> Source : sources_attempted *
+ExtractionRun --> Source : sources_succeeded *
+ExtractionRun --> ExtractionStatus: status
+ExtractionRun --> ExtractionTrigger : triggered_by
+
+
+Source --> SourceName : name
+
+@enduml

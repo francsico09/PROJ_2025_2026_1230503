@@ -79,4 +79,5 @@ async def run_extraction_for_user(
         "profile_updated": result.profile_updated,
         "skipped": result.skipped_reasons,
         "errors": result.errors,
+        "metrics": result.metrics
     }

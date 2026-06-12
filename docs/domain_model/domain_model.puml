@@ -1,0 +1,34 @@
+@startuml
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide members
+
+class User
+class ResearcherProfile
+class ResearcherMetric
+class Source
+class ExtractionRun
+
+enum UserRole
+enum SourceName
+enum ExtractionTrigger
+enum ExtractionStatus
+
+User -> UserRole : role
+User --> ResearcherProfile : can have
+
+ResearcherProfile --> ResearcherMetric : has *
+
+ResearcherMetric --> Source : from
+
+ExtractionRun -> ResearcherProfile : for
+
+ExtractionRun --> Source : attempts *
+ExtractionRun --> Source : succeeds *
+ExtractionRun --> ExtractionStatus
+ExtractionRun --> ExtractionTrigger : is triggered by
+
+Source --> SourceName : name and url
+
+@enduml

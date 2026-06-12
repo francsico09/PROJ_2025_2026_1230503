@@ -24,11 +24,11 @@ export default function LoginView({
         <div className="login-wrap">
             <div className="login-left">
                 <h1 className="login-heading">
-                    Research<br />Intelligence<br />Platform
+                    Research<br />Analytics and<br />Metrics<br />Platform
                 </h1>
                 <p className="login-sub">
                     Centralise and monitor researcher metrics from
-                    Google Scholar and ORCID.
+                    Google Scholar, Web of Science, Scopus and ORCID.
                 </p>
                 <div className="login-dots">
                     <span className="dot dot-active" />

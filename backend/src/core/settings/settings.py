@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     WOS_API_KEY: str = "1a004c4e2973e946c0758a0107e87162e296081f"
     WOS_BASE_URL: str = "https://api.clarivate.com/apis/wos-starter/v1"
 
+    # Admin Credentials
+    ADMIN_EMAIL: str    = "admin@isep.ipp.pt"
+    ADMIN_PASSWORD: str = "admin"
+
     DEBUG: bool = False
 
     model_config = SettingsConfigDict(

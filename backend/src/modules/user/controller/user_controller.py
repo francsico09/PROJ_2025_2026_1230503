@@ -1,6 +1,7 @@
 import uuid
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Query
+from sqlalchemy.engine import default
 
 from src.core.domain.pagination.schema.pagination_schema import PaginationParams, PaginatedResponse
 from src.core.repositories.repositories import Repositories
@@ -10,11 +11,17 @@ from src.core.domain.user.user_model.user_model import User
 
 from src.core.domain.user.user_schema.user_schemas import UserResponse, UserCreate, UserUpdate
 
+from src.modules.ldap.service.ldap_service import LDAPService
+from src.core.domain.user.user_model.user_role import UserRole
+
 router = APIRouter(prefix="/users", tags=["Users"])
 
+def get_ldap_service() -> LDAPService:
+    return LDAPService()
 
 def get_user_service() -> UserService:
-    return UserService(Repositories())
+    ldap_service = get_ldap_service()
+    return UserService(Repositories(), ldap_service)
 
 
 @router.get(
@@ -25,9 +32,10 @@ def get_user_service() -> UserService:
 )
 async def fetch_users(
         params: PaginationParams = Depends(),
+        exclude_names: list[str] = Query(default=[]),
         service: UserService = Depends(get_user_service),
 ) -> PaginatedResponse[UserResponse]:
-    return await service.fetch_users(params)
+    return await service.fetch_users(params, exclude_names=exclude_names or None)
 
 
 @router.get(
@@ -41,7 +49,7 @@ async def get_user_by_id(
         current_user: User = Depends(get_current_user),
         service: UserService = Depends(get_user_service),
 ) -> UserResponse:
-    if current_user.role != "admin" and current_user.id != user_id:
+    if current_user.role != UserRole.admin and current_user.id != user_id:
         from fastapi import HTTPException
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied.")
 
@@ -73,7 +81,7 @@ async def update_user(
         current_user: User = Depends(get_current_user),
         service: UserService = Depends(get_user_service),
 ) -> UserResponse:
-    if current_user.role != "admin" and current_user.id != user_id:
+    if current_user.role != UserRole.admin and current_user.id != user_id:
         from fastapi import HTTPException
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied.")
 

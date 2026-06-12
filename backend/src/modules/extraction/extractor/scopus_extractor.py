@@ -18,22 +18,43 @@ class ScopusExtractor:
             "Accept": "application/json",
         }
 
-    def extract(self, identifier: str) -> Optional[RawScopusMetrics]:
+    def extract(self, identifier: str, user_name: str) -> Optional[RawScopusMetrics]:
         logger.info(f"[Scopus] Starting extraction for identifier '{identifier}'")
 
         try:
             if identifier.isdigit():
                 scopus_id = identifier
             else:
-                scopus_id = self._search_author_id(identifier)
+                query = self._build_author_query(identifier, user_name)
+                scopus_id = self._search_author_id(query)
+
                 if not scopus_id:
                     return None
 
-            return self._extract_from_search(scopus_id)
+            return self._retrieve_author_metrics(scopus_id)
 
         except Exception as e:
             logger.error(f"[Scopus] Error for '{identifier}': {type(e).__name__}: {e}")
             return None
+
+    @staticmethod
+    def _build_author_query(identifier: str, user_name: str) -> str:
+        """
+        Builds the most precise query possible.
+        Prefers structured AUTHLASTNAME/AUTHFIRST from user_name,
+        falling back to the raw identifier string.
+        """
+        parts = user_name.strip().split() if user_name and user_name.strip() else []
+
+        if len(parts) >= 2:
+            first_name = parts[0]
+            last_name  = " ".join(parts[1:])
+            query = f"AUTHLASTNAME({last_name}) AND AUTHFIRST({first_name})"
+            logger.info(f"[Scopus] Built structured query from name: '{query}'")
+            return query
+
+        logger.info(f"[Scopus] Falling back to raw identifier query: '{identifier}'")
+        return identifier
 
     def _search_author_id(self, query: str) -> Optional[str]:
         logger.info(f"[Scopus] Searching author by query: '{query}'")
@@ -52,7 +73,9 @@ class ScopusExtractor:
             logger.warning(f"[Scopus] No author found for query '{query}'")
             return None
 
-        response.raise_for_status()
+        if response.status_code >= 400:
+            logger.error(response.text)
+
         data = response.json()
 
         entries = data.get("search-results", {}).get("entry", [])
@@ -67,13 +90,51 @@ class ScopusExtractor:
         logger.info(f"[Scopus] Found Scopus ID: {scopus_id}")
         return scopus_id
 
-    def _extract_from_search(self, scopus_id: str) -> Optional[RawScopusMetrics]:
+    def _retrieve_author_metrics(self, scopus_id: str) -> Optional[RawScopusMetrics]:
         """
-        Uses Search API.
-        Extracts available researcher_metric from search response.
+        Uses Author Retrieval API with view=METRICS.
+        Returns h-index, cited-by-count, citations-count, document-count.
+        Falls back to Search API if Retrieval API returns 401/403 (no institutional access).
         """
+        logger.info(f"[Scopus] Retrieving metrics for ID '{scopus_id}'")
 
-        logger.info(f"[Scopus] Extracting from search API for ID '{scopus_id}'")
+        response = requests.get(
+            f"{self._base_url}/author/author_id/{scopus_id}",
+            headers=self._headers,
+            params={"view": "METRICS"},
+        )
+
+        if response.status_code in (401, 403):
+            logger.warning(f"[Scopus] Retrieval API unauthorized, falling back to Search API")
+            return self._retrieve_from_search(scopus_id)
+
+        response.raise_for_status()
+
+        profile = response.json().get("author-retrieval-response", [{}])[0]
+
+        metrics = RawScopusMetrics(
+            scopus_id=scopus_id,
+            h_index=int(profile.get("h-index") or 0),
+            total_citations=int(profile.get("cited-by-count") or 0),
+            total_publications=int(profile.get("document-count") or 0),
+            url=f"https://www.scopus.com/authid/detail.uri?authorId={scopus_id}",
+        )
+
+        logger.info(
+            f"[Scopus] Extracted from RETRIEVAL — "
+            f"publications={metrics.total_publications}, "
+            f"citations={metrics.total_citations}, "
+            f"h_index={metrics.h_index}"
+        )
+
+        return metrics
+
+    def _retrieve_from_search(self, scopus_id: str) -> Optional[RawScopusMetrics]:
+        """
+        Fallback: Search API with AU-ID query.
+        Only document-count is reliably available here.
+        """
+        logger.info(f"[Scopus] Fallback search extraction for ID '{scopus_id}'")
 
         response = requests.get(
             f"{self._base_url}/search/author",
@@ -85,9 +146,8 @@ class ScopusExtractor:
         )
 
         response.raise_for_status()
-        data = response.json()
 
-        entries = data.get("search-results", {}).get("entry", [])
+        entries = response.json().get("search-results", {}).get("entry", [])
 
         if not entries:
             logger.warning(f"[Scopus] No data found for ID '{scopus_id}'")
@@ -95,27 +155,17 @@ class ScopusExtractor:
 
         entry = entries[0]
 
-        document_count = int(entry.get("document-count") or 0)
-
-        preferred_name = entry.get("preferred-name", {})
-        given = preferred_name.get("given-name", "")
-        surname = preferred_name.get("surname", "")
-
-        affiliation = entry.get("affiliation-current", {}).get("affiliation-name")
-
         metrics = RawScopusMetrics(
             scopus_id=scopus_id,
-            h_index=0,  # Not available
-            total_citations=0,  # Not available
-            total_publications=document_count,
+            h_index=0,
+            total_citations=0,
+            total_publications=int(entry.get("document-count") or 0),
             url=f"https://www.scopus.com/authid/detail.uri?authorId={scopus_id}",
         )
 
         logger.info(
-            f"[Scopus] Extracted from SEARCH — "
-            f"publications={metrics.total_publications}, "
-            f"name={given} {surname}, "
-            f"affiliation={affiliation}"
+            f"[Scopus] Extracted from SEARCH (fallback) — "
+            f"publications={metrics.total_publications}"
         )
 
         return metrics

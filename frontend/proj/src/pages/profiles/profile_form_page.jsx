@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import Icon, { ICONS } from '../../components/icon.jsx';
 import { extractMetricsForUser } from '../../api/extraction.js';
-import {useProfiles} from "../../hooks/use_profiles.js";
+import { useProfiles } from "../../hooks/use_profiles.js";
+import ExtractionResultCards from './extraction_cards/extraction_result_cards.jsx';
 
 const EMPTY_FORM = {
     orcid: '',
@@ -21,6 +22,11 @@ export default function ProfileFormPage({ user, profile, onBack, onExtraction })
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [extractionLoading, setExtractionLoading] = useState(false);
+    const [extractedMetrics, setExtractedMetrics] = useState(null);
+    const [keywordsInput, setKeywordsInput] = useState(
+        form.keywords.join(', ')
+    );
+
     const { update, create } = useProfiles();
 
     useEffect(() => {
@@ -46,14 +52,15 @@ export default function ProfileFormPage({ user, profile, onBack, onExtraction })
     const handleExtraction = async () => {
         setExtractionLoading(true);
         setError(null);
+        setExtractedMetrics(null);
 
         try {
             const token = localStorage.getItem('token');
             const result = await extractMetricsForUser(user.id, token);
 
-            console.log('Extraction result:', result);
-
             setSuccess(true);
+            setExtractedMetrics(result.metrics);
+            console.log(result.metrics);
 
             if (onExtraction) {
                 onExtraction(result);
@@ -194,58 +201,68 @@ export default function ProfileFormPage({ user, profile, onBack, onExtraction })
                     />
                 </div>
 
+                {/* KEYWORDS */}
                 <div className="form-group">
                     <label>Keywords</label>
                     <input
                         className="form-input"
                         placeholder="AI, Machine Learning, Networks..."
-                        value={form.keywords.join(', ')}
+                        value={keywordsInput}
                         onChange={(e) => {
                             const value = e.target.value;
+                            setKeywordsInput(value);
 
-                            const keywords = value
-                                .split(',')
-                                .map(k => k.trim())
-                                .filter(k => k.length > 0);
-
-                            set('keywords', keywords);
+                            set(
+                                'keywords',
+                                value
+                                    .split(',')
+                                    .map(k => k.trim())
+                                    .filter(k => k.length > 0)
+                            );
                         }}
                     />
                 </div>
 
-                {/* STATUS */}
-                {success && (
-                    <div className="alert alert-success">
-                        Profile saved successfully.
+                        {/* STATUS */}
+                        {success && (
+                            <div className="alert alert-success">
+                                Profile saved successfully.
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="alert alert-danger">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* ACTIONS */}
+                    <div className="form-actions">
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={loading}
+                        >
+                            {loading ? 'Saving…' : (isEdit ? 'Save changes' : 'Create profile')}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={handleExtraction}
+                            disabled={extractionLoading}
+                        >
+                            {extractionLoading ? 'Extracting…' : 'Extract Metrics'}
+                        </button>
                     </div>
-                )}
-
-                {error && (
-                    <div className="alert alert-danger">
-                        {error}
-                    </div>
-                )}
-
-                {/* ACTIONS */}
-                <div className="form-actions">
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={loading}
-                    >
-                        {loading ? 'Saving…' : (isEdit ? 'Save changes' : 'Create profile')}
-                    </button>
-
-                    <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={handleExtraction}
-                        disabled={extractionLoading}
-                    >
-                        {extractionLoading ? 'Extracting…' : 'Extract researcher_metric'}
-                    </button>
-                </div>
             </form>
+
+            {extractedMetrics && (
+                <ExtractionResultCards
+                    metrics={extractedMetrics}
+                    onClose={() => setExtractedMetrics(null)}
+                />
+            )}
         </div>
     );
 }

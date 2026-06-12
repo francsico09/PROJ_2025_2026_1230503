@@ -1,0 +1,82 @@
+@startuml
+
+autonumber
+
+actor User as user
+
+participant ":UI" as ui
+participant ":ExportController" as controller
+participant ":ExportService" as service
+
+participant ":Postgres\nUser" as user_repo
+participant ":Postgres\nResearcherProfile" as profile_repo
+participant ":Postgres\nResearcherMetric" as metrics_repo
+participant ":Repositories" as repos
+
+activate user
+    user -> ui: export metrics
+
+    activate ui
+        ui -> controller: HTTP GET /researcher_metric/{researcher_id}
+
+        activate controller
+            controller -> service: export(researcher_id, format, scope, \nstart_date, end_date)
+
+            activate service
+                service -> repos: _aenter_()
+
+                activate repos
+                    repos --> service
+
+                    service -> user_repo: get_by_id(researcher_id)
+
+                    activate user_repo
+                        user_repo --> service: User
+
+                        alt user doesn't exist
+                            user_repo --> service: None
+
+                            service --> controller: HTTP 404 NOT FOUND
+
+                            controller --> ui: HTTP 404 NOT FOUND
+
+                            ui --> user: error message
+                        end alt
+                    deactivate user_repo
+
+                    service -> profile_repo: get_by_id(profile.id)
+
+                    activate profile_repo
+                        profile_repo --> service: ResearcherProfile
+
+                        alt profile doesn't exist
+                            profile_repo --> service: None
+
+                            service --> controller: HTTP 404 NOT FOUND
+
+                            controller --> ui: HTTP 404 NOT FOUND
+
+                            ui --> user: error message
+                        end alt
+                    deactivate profile_repo
+
+                    service -> metrics_repo: get_by_researcher_id(profile.id)
+
+                    activate metrics_repo
+                        metrics_repo --> service: list[ResearcherMetric]
+                    deactivate metrics_repo
+
+                    service -> repos: _aexit_()
+                    repos --> service
+                deactivate repos
+
+                service --> controller: list[bytes, str]
+            deactivate service
+
+            controller --> ui: Response
+        deactivate controller
+
+        ui --> user: file
+    deactivate ui
+deactivate user
+@enduml

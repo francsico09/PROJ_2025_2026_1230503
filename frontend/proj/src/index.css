@@ -1479,3 +1479,137 @@ tbody tr.row-selected { background: var(--accent-light) !important; }
     font-size: 13px;
     color: var(--text-2);
 }
+
+/* ══════════════════════════════════════
+   EXTRACTION RESULT CARDS
+══════════════════════════════════════ */
+
+.extraction-result-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 550; /* Um pouco acima do confirm dialog se necessário */
+    backdrop-filter: blur(3px);
+    padding: 16px;
+}
+
+.extraction-result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeInScale 0.2s ease-out;
+}
+
+/* ── Header ── */
+.extraction-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.extraction-result-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-1);
+    margin-bottom: 2px;
+}
+
+.extraction-result-subtitle {
+    font-size: 13px;
+    color: var(--text-2);
+}
+
+/* ── Meta (Source + Date) ── */
+.extraction-result-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.text-hint {
+    font-size: 12px;
+    color: var(--text-2);
+    opacity: 0.8;
+}
+
+/* ── Metric Fields Grid ── */
+.extraction-result-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 4px 0;
+}
+
+.extraction-result-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.02); /* Leve fundo para destacar as linhas */
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: background 0.15s ease;
+}
+
+/* Fallback de contraste caso o fundo da app seja escuro */
+@media (prefers-color-scheme: dark) {
+    .extraction-result-field {
+        background: rgba(255, 255, 255, 0.03);
+    }
+}
+
+.extraction-result-field:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: var(--border);
+}
+
+.extraction-result-field-label {
+    font-size: 13.5px;
+    color: var(--text-2);
+}
+
+.extraction-result-field-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-1);
+}
+
+/* ── Navigation ── */
+.extraction-result-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    gap: 12px;
+}
+
+.extraction-result-nav .btn {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* ── Animação de entrada suave ── */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

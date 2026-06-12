@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import HTTPException
+from fastapi import HTTPException, logger
 from starlette import status
 
 from datetime import datetime, timezone
@@ -12,6 +12,9 @@ from src.core.domain.pagination.schema.pagination_schema import PaginationParams
 from src.core.domain.researcher_metric.researcher_model_schema.researcher_metric_schemas import \
     ResearcherMetricCreate, ResearcherMetricResponse, ResearcherMetricUpdate
 from src.database.models.researcher_metric_orm import ResearcherMetricORM
+from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionRun
+from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionTrigger
+from src.core.domain.extraction_run.extraction_run_model.extraction_run_model import ExtractionStatus
 
 
 class ResearcherMetricService:
@@ -21,15 +24,36 @@ class ResearcherMetricService:
 
     async def create_metric(self, metric_data: ResearcherMetricCreate) -> ResearcherMetricResponse:
         async with self._repos as repos:
-            profile = await repos.profiles.get_by_id(metric_data.researcher_id)
+            profile = await repos.profiles.get_by_user_id(metric_data.researcher_id)
 
             if not profile:
-                raise HTTPException(status_code=404, detail="Profile not found")
+                print(f"Profile not found for user id: {metric_data.researcher_id}, retrying with profile id")
+                retry = await repos.profiles.get_by_id(metric_data.researcher_id)
+
+                if not retry:
+                    raise HTTPException(status_code=404, detail="Profile not found with user id or profile id")
+
+                profile = retry
+
+            run: ExtractionRun
+            if not metric_data.extraction_run_id:
+                run = ExtractionRun(
+                    id=uuid.uuid4(),
+                    researcher_id=profile.id,
+                    triggered_at=datetime.now(timezone.utc),
+                    triggered_by=ExtractionTrigger.created_by_admin,
+                    status=ExtractionStatus.completed,
+                    sources_attempted=[],
+                    sources_succeeded=[]
+                )
+
+                await repos.extraction_runs.save(run)
+                await repos.commit()
 
             metric = ResearcherMetric(
                 id=uuid.uuid4(),
-                researcher_id=metric_data.researcher_id,
-                extraction_run_id=metric_data.extraction_run_id,
+                researcher_id=profile.id,
+                extraction_run_id=metric_data.extraction_run_id if metric_data.extraction_run_id else run.id,
                 date=datetime.now(timezone.utc),
                 h_index=metric_data.h_index,
                 total_citations=metric_data.total_citations,
@@ -153,7 +177,8 @@ class ResearcherMetricService:
     async def fetch_latest_by_user(
             self,
             source: str | None = None,
-    ) -> list[ResearcherMetricResponse]:
+            params: PaginationParams = None
+    ) -> PaginatedResponse[ResearcherMetricResponse]:
 
         async with self._repos as repos:
-            return await repos.metrics.fetch_latest_by_user(source)
+            return await repos.metrics.fetch_latest_by_user(source, params)

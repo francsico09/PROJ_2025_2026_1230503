@@ -7,7 +7,6 @@ const EMPTY_FORM = {
     email: '',
     role: 'researcher',
     active: true,
-    password: '',
 };
 
 export default function UserEditPage({ item, onBack }) {
@@ -44,7 +43,6 @@ export default function UserEditPage({ item, onBack }) {
                 await create(form);
             } else {
                 const payload = { ...form };
-                if (!payload.password) delete payload.password;
                 await update(item.id, payload);
             }
 
